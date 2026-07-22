@@ -51,7 +51,7 @@
 <body class="pb-24">
 
   <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
-    <!-- Шапка приложения с Хлебными Крошками и Скрытой Кнопкой Управления -->
+    <!-- Шапка приложения -->
     <header id="header" class="p-3 border-b border-gray-800 sticky top-0 bg-[#131415]/95 backdrop-blur z-30 flex items-center justify-between">
       <div class="flex items-center space-x-2 overflow-hidden">
         <button id="back-btn" onclick="goBack()" class="hidden text-blue-400 text-sm flex items-center gap-1 font-medium shrink-0">
@@ -63,15 +63,15 @@
         </div>
       </div>
 
-      <!-- Кнопка «Управление» (Отображается ТОЛЬКО для @beerezka0 и @mokiner) -->
+      <!-- Кнопка «Управление» (Только для @beerezka0 и @mokiner) -->
       <button id="admin-btn" onclick="toggleAdminModal()" class="hidden text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1.5 rounded-xl hover:bg-blue-500/20 flex items-center gap-1.5 shrink-0 font-medium">
         <i class="fa-solid fa-gear text-xs"></i> Управление
       </button>
     </header>
 
-    <!-- Главная область контента -->
+    <!-- Основной контент -->
     <main id="main-content" class="p-3 flex-1">
-      <!-- Поисковая строка -->
+      <!-- Поиск -->
       <div id="search-box" class="relative mb-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
         <input type="text" id="search-input" oninput="handleSearch()" placeholder="Найти товар или бренд..." class="w-full tg-input rounded-xl py-2 pl-9 pr-4 text-sm">
@@ -86,7 +86,7 @@
       <!-- Уровень 3: Разновидности (Товары) -->
       <div id="view-products" class="hidden grid grid-cols-2 gap-3"></div>
 
-      <!-- Карточка выбранной разновидности -->
+      <!-- Карточка товара -->
       <div id="view-detail" class="hidden space-y-4"></div>
 
       <!-- Корзина -->
@@ -129,7 +129,7 @@
     </nav>
   </div>
 
-  <!-- Модальное Окно Управления (Панель Админа) -->
+  <!-- Модальное Окно Управления (Админка) -->
   <div id="admin-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex flex-col p-4">
     <div class="bg-[#1c1d1e] rounded-2xl flex-1 p-4 flex flex-col overflow-hidden max-w-md w-full mx-auto border border-gray-800">
       <div class="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
@@ -179,7 +179,7 @@
         </div>
       </div>
 
-      <!-- Поля для разновидности товара -->
+      <!-- Дополнительные поля для разновидности товара -->
       <div id="product-extra-fields" class="hidden space-y-3">
         <div>
           <label class="text-[11px] text-gray-400 block mb-1">Цена (Br) *</label>
@@ -198,36 +198,34 @@
     </div>
   </div>
 
-  <!-- Firebase SDK для работы с Облаком в реальном времени -->
+  <!-- Firebase SDK для работы с единым облаком Firestore -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Инициализация Telegram SDK
+    // Инициализация Telegram WebApp API
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.expand();
       tg.enableClosingConfirmation();
     }
 
-    // Список разрешенных юзеров-администраторов
+    // Авторизация по список админов
     const ADMIN_USERS = ['beerezka0', 'mokiner'];
     const tgUser = tg?.initDataUnsafe?.user;
     const currentUsername = (tgUser?.username || '').replace('@', '').trim().toLowerCase();
     const isAdmin = ADMIN_USERS.map(u => u.toLowerCase()).includes(currentUsername);
 
-    // Проверка отображения кнопки «Управление»
     if (isAdmin) {
       document.getElementById('admin-btn').classList.remove('hidden');
     } else {
       document.getElementById('admin-btn').classList.add('hidden');
     }
 
-    // Заглушка для битых ссылок на фото
     const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60';
 
-    // Firebase конфигурация для облачного хранения
+    // Firebase Конфигурация
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
       apiKey: "demo",
       authDomain: "demo.firebaseapp.com",
@@ -240,12 +238,11 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'velix-store-app';
 
-    // Путь к документу с общим каталогом в базе данных
-    const catalogDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'main');
+    // ОБЩИЙ ДОКУМЕНТ КАТАЛОГА ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
+    const catalogDocRef = doc(db, 'catalog', 'main');
 
-    // Состояние приложения
+    // Главное состояние
     window.appState = {
       categories: [
         {
@@ -263,79 +260,70 @@
                   title: 'Glitch (150 mg)',
                   price: 13,
                   image: 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=400&auto=format&fit=crop&q=60',
-                  description: 'Мощная жевательная смесь Glitch 150mg.',
-                  variants: [{ name: 'Полярная Мята', stock: 5 }]
-                },
-                {
-                  id: 'prod_glitch_75',
-                  title: 'Glitch (75 mg)',
-                  price: 13,
-                  image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&auto=format&fit=crop&q=60',
-                  description: 'Сбалансированная крепость 75mg.',
-                  variants: [{ name: 'Ледяной Лимон', stock: 4 }]
+                  description: 'Мощная жевательная смесь Glitch 150mg.'
                 }
               ]
             }
           ]
-        },
-        {
-          id: 'cat_pods',
-          title: 'POD - системы',
-          image: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=300&auto=format&fit=crop&q=60',
-          subcategories: []
         }
       ],
       cart: [],
       currentView: 'categories',
       selectedCat: null,
       selectedSubCat: null,
-      selectedProduct: null,
-      selectedVariantIndex: 0
+      selectedProduct: null
     };
 
     let adminLevel = 'categories';
     let selectedAdminCatId = null;
     let selectedAdminSubCatId = null;
 
-    // Синхронизация данных из БД в реальном времени у ВСЕХ пользователей
+    // Синхронизация каталога в реальном времени у ВСЕХ пользователей
     async function syncCatalogFromCloud() {
       try {
         await signInAnonymously(auth);
-      } catch(e) {}
-
-      onSnapshot(catalogDocRef, (snapshot) => {
-        if (snapshot.exists() && snapshot.data().categories) {
-          window.appState.categories = snapshot.data().categories;
-        } else {
-          // Если базы ещё нет, запишем дефолтный каталог
-          setDoc(catalogDocRef, { categories: window.appState.categories }, { merge: true });
-        }
-        
-        // Перерисовываем экран
-        if (window.appState.currentView === 'categories') renderCategories();
-        else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) openCategory(window.appState.selectedCat.id);
-        else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) openSubCategory(window.appState.selectedSubCat.id);
-
-        if (!document.getElementById('admin-modal').classList.contains('hidden')) {
-          renderAdminList();
-        }
-      }, (error) => {
-        // Запасной план: загрузка из localStorage если нет соединения с сетью
-        const local = localStorage.getItem('velix_local_catalog');
-        if (local) {
-          try { window.appState.categories = JSON.parse(local).categories; } catch(e){}
-          renderCategories();
-        }
-      });
+        onSnapshot(catalogDocRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            if (data.categories) {
+              window.appState.categories = data.categories;
+            }
+          } else {
+            // Создаем документ при первом запуске
+            setDoc(catalogDocRef, {
+              categories: window.appState.categories,
+              updatedAt: Date.now()
+            });
+          }
+          // Перерисовываем интерфейс у всех пользователей
+          if (window.appState.currentView === 'categories') {
+            renderCategories();
+          } else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) {
+            openCategory(window.appState.selectedCat.id);
+          } else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) {
+            openSubCategory(window.appState.selectedSubCat.id);
+          }
+          // Обновляем админку, если она открыта
+          if (!document.getElementById('admin-modal').classList.contains('hidden')) {
+            renderAdminList();
+          }
+        });
+      } catch (error) {
+        console.error('Ошибка синхронизации:', error);
+      }
     }
 
-    // Запись изменений в облако
+    // Сохранение изменений администратора в облако
     async function saveCatalogToCloud() {
-      localStorage.setItem('velix_local_catalog', JSON.stringify({ categories: window.appState.categories }));
       try {
-        await setDoc(catalogDocRef, { categories: window.appState.categories });
-      } catch(e) {
-        console.error("Ошибка сохранения в БД:", e);
+        await setDoc(catalogDocRef, {
+          categories: window.appState.categories,
+          updatedAt: Date.now()
+        });
+        console.log('Каталог сохранён в облако');
+      } catch (error) {
+        console.error('Ошибка сохранения:', error);
+        alert('Не удалось сохранить изменения');
       }
     }
 
@@ -344,7 +332,7 @@
       document.getElementById('breadcrumbs').innerHTML = crumbs.join(' <span class="text-gray-600 font-normal">&gt;</span> ');
     }
 
-    // Навигация
+    // Переключение экранов
     window.navigateTo = function(view) {
       window.appState.currentView = view;
       const views = ['categories', 'subcategories', 'products', 'detail', 'cart', 'checkout', 'search'];
@@ -390,7 +378,7 @@
       }
     };
 
-    // Рендер Уровня 1 (Категории)
+    // Рендер Категорий (Уровень 1)
     window.renderCategories = function() {
       window.appState.selectedCat = null;
       window.appState.selectedSubCat = null;
@@ -413,7 +401,7 @@
       window.navigateTo('categories');
     };
 
-    // Рендер Уровня 2 (Виды категории)
+    // Рендер Видов (Уровень 2)
     window.openCategory = function(catId) {
       const cat = window.appState.categories.find(c => c.id === catId);
       if (!cat) return;
@@ -437,7 +425,7 @@
       window.navigateTo('subcategories');
     };
 
-    // Рендер Уровня 3 (Разновидности товаров)
+    // Рендер Товаров (Уровень 3)
     window.openSubCategory = function(subCatId) {
       const sub = window.appState.selectedCat?.subcategories.find(s => s.id === subCatId);
       if (!sub) return;
@@ -469,7 +457,7 @@
       window.navigateTo('products');
     };
 
-    // Карточка товара
+    // Детальный просмотр товара
     window.openProductDetail = function(prodId) {
       const prod = window.appState.selectedSubCat?.products.find(p => p.id === prodId);
       if (!prod) return;
@@ -616,7 +604,7 @@
       if (tg && tg.sendData) {
         tg.sendData(JSON.stringify(payload));
       } else {
-        alert('Заказ успешно создан!');
+        alert('Заказ оформлен!');
       }
 
       window.appState.cart = [];
@@ -657,7 +645,7 @@
     };
 
     // ==========================================
-    // ПАНЕЛЬ УПРАВЛЕНИЯ (АДМИНКА С 3 УРОВНЯМИ)
+    // ЛОГИКА АДМИН-ПАНЕЛИ
     // ==========================================
 
     window.toggleAdminModal = function() {
@@ -768,9 +756,8 @@
       renderAdminList();
     };
 
-    // Удаление
     window.deleteCategory = function(catId) {
-      if (confirm('Удалить эту категорию? Все её виды и товары тоже удалятся.')) {
+      if (confirm('Удалить эту категорию?')) {
         window.appState.categories = window.appState.categories.filter(c => c.id !== catId);
         saveCatalogToCloud();
         renderAdminList();
@@ -800,7 +787,6 @@
       }
     };
 
-    // Модальное окно добавления
     window.openAddModal = function() {
       document.getElementById('form-title-input').value = '';
       document.getElementById('form-image-input').value = '';
@@ -886,7 +872,7 @@
     };
 
     // Запуск приложения
-    window.onload = function() {
+    window.onload = function () {
       syncCatalogFromCloud();
     };
   </script>
