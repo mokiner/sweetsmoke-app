@@ -42,10 +42,6 @@
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
   </style>
 </head>
 <body class="pb-24">
@@ -63,11 +59,16 @@
         </div>
       </div>
 
-      <!-- Кнопка «Управление» (Отображается ТОЛЬКО для @beerezka0 и @mokiner) -->
+      <!-- Кнопка «Управление» (Видна ТОЛЬКО для @beerezka0 и @mokiner) -->
       <button id="admin-btn" onclick="toggleAdminModal()" class="hidden text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1.5 rounded-xl hover:bg-blue-500/20 flex items-center gap-1.5 shrink-0 font-medium">
         <i class="fa-solid fa-gear text-xs"></i> Управление
       </button>
     </header>
+
+    <!-- Предупреждение о не настроенном Firebase -->
+    <div id="firebase-warning" class="hidden bg-amber-500/20 border-b border-amber-500/40 p-2 text-[11px] text-amber-200 text-center font-medium">
+      ⚠️ Облачная синхронизация не настроена. Вставьте ключи Firebase в index.html
+    </div>
 
     <!-- Основной контент -->
     <main id="main-content" class="p-3 flex-1">
@@ -137,8 +138,8 @@
           <h2 class="text-sm font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-sliders text-blue-400"></i> Управление каталогом
           </h2>
-          <div id="sync-status" class="text-[10px] text-green-400 font-medium mt-0.5">
-            🟢 Облако: Подключено
+          <div id="sync-status" class="text-[10px] text-gray-400 font-medium mt-0.5">
+            ⏳ Проверка подключения...
           </div>
         </div>
         <button onclick="toggleAdminModal()" class="text-gray-400 text-xl hover:text-white">&times;</button>
@@ -207,7 +208,7 @@
     </div>
   </div>
 
-  <!-- Облачный скрипт синхронизации -->
+  <!-- Инициализация Firebase Firestore -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -219,7 +220,7 @@
       tg.enableClosingConfirmation();
     }
 
-    // Проверка доступа Администратора
+    // Доступ к Управлению (Только для этих двух юзеров)
     const ADMIN_USERS = ['beerezka0', 'mokiner'];
     const tgUser = tg?.initDataUnsafe?.user;
     const currentUsername = (tgUser?.username || '').replace('@', '').trim().toLowerCase();
@@ -227,44 +228,39 @@
 
     if (isAdmin) {
       document.getElementById('admin-btn').classList.remove('hidden');
-    } else {
-      document.getElementById('admin-btn').classList.add('hidden');
     }
 
     const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60';
 
-    // Вторичный независимый Облачный Сервер (Гарантирует 100% работу sync у всех)
-    const PUBLIC_CLOUD_SYNC_URL = 'https://api.jsonbin.io/v3/b/669d0123e41b4d34e4123456_velix_shop';
-    const PUBLIC_KV_STORE_KEY = 'velix_sweetsmoke_catalog_v1';
-
-    // Конфигурация Firebase
+    // ВСТАВЬТЕ СВОИ 6 СТРОК ИЗ FIREBASE CONSOLE СУДА:
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-      apiKey: "PASTE_REAL_API_KEY",
-      authDomain: "PASTE_REAL_AUTH_DOMAIN",
-      projectId: "PASTE_REAL_PROJECT_ID",
-      storageBucket: "PASTE_REAL_STORAGE_BUCKET",
-      messagingSenderId: "PASTE_REAL_SENDER_ID",
-      appId: "PASTE_REAL_APP_ID"
+      apiKey: "ВАШ_API_KEY",
+      authDomain: "ВАШ_PROJECT.firebaseapp.com",
+      projectId: "ВАШ_PROJECT_ID",
+      storageBucket: "ВАШ_PROJECT.appspot.com",
+      messagingSenderId: "ВАШ_SENDER_ID",
+      appId: "ВАШ_APP_ID"
     };
 
-    let db = null;
-    let auth = null;
-    let catalogDocRef = null;
-    let isFirebaseActive = false;
+    let app, auth, db, catalogDocRef;
+    let isCloudReady = false;
 
-    try {
-      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "PASTE_REAL_API_KEY") {
-        const app = initializeApp(firebaseConfig);
+    // Проверка правильности конфигурации
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "ВАШ_API_KEY" && firebaseConfig.apiKey !== "PASTE_REAL_API_KEY") {
+      try {
+        app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
         catalogDocRef = doc(db, 'catalog', 'main');
-        isFirebaseActive = true;
+        isCloudReady = true;
+      } catch (e) {
+        console.error("Ошибка инициализации Firebase:", e);
       }
-    } catch (e) {
-      console.log("Firebase не инициализирован, переключаемся на Облачный API REST");
+    } else {
+      document.getElementById('firebase-warning').classList.remove('hidden');
     }
 
-    // Главное состояние приложения
+    // Состояние приложения
     window.appState = {
       categories: [
         {
@@ -320,113 +316,79 @@
       return JSON.stringify(data || []);
     }
 
-    function applyNewCatalog(newCategories) {
-      const newHash = getCatalogHash(newCategories);
-      if (newHash !== lastCatalogHash) {
-        lastCatalogHash = newHash;
-        window.appState.categories = newCategories;
-
-        if (window.appState.currentView === 'categories') {
-          renderCategories();
-        } else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) {
-          openCategory(window.appState.selectedCat.id);
-        } else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) {
-          openSubCategory(window.appState.selectedSubCat.id);
-        }
-      }
-
-      if (!document.getElementById('admin-modal').classList.contains('hidden')) {
-        renderAdminList();
-      }
-    }
-
-    // ПОЛНОЦЕННАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ У ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
+    // МГНОВЕННАЯ СИНХРОНИЗАЦИЯ СО ВСЕМИ ПОЛЬЗОВАТЕЛЯМИ
     async function syncCatalogFromCloud() {
-      // 1. Попытка подписки через Firebase
-      if (isFirebaseActive && auth && catalogDocRef) {
-        try {
-          await signInAnonymously(auth);
-          onSnapshot(catalogDocRef, (snapshot) => {
-            if (snapshot.exists() && snapshot.data().categories) {
-              applyNewCatalog(snapshot.data().categories);
-              updateSyncStatus('🟢 Облако: Firebase Подключено');
-            } else {
-              saveCatalogToCloud();
-            }
-          }, (err) => {
-            console.error("Firebase error, fallback to REST sync:", err);
-            startRestPolling();
-          });
-          return;
-        } catch (e) {
-          console.error("Firebase Auth failed, using REST sync");
-        }
+      if (!isCloudReady) {
+        updateSyncStatus('🔴 Ошибка: Не вставлены ключи Firebase');
+        renderCategories();
+        return;
       }
 
-      // 2. Резервный Облачный Сервер (работает мгновенно для всех без настроек!)
-      startRestPolling();
-    }
-
-    let restInterval = null;
-    function startRestPolling() {
-      fetchCatalogFromRest();
-      if (!restInterval) {
-        restInterval = setInterval(fetchCatalogFromRest, 3000); // Синхронизируем каждые 3 секунды
-      }
-    }
-
-    async function fetchCatalogFromRest() {
       try {
-        const res = await fetch(`https://kvdb.io/4yC8M3y84M3pP211velix/${PUBLIC_KV_STORE_KEY}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            applyNewCatalog(data);
-            updateSyncStatus('🟢 Облако: Синхронизировано');
+        await signInAnonymously(auth);
+        updateSyncStatus('🟡 Авторизация в облаке...');
+
+        onSnapshot(catalogDocRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            if (data && data.categories) {
+              const newHash = getCatalogHash(data.categories);
+              
+              if (newHash !== lastCatalogHash) {
+                lastCatalogHash = newHash;
+                window.appState.categories = data.categories;
+
+                if (window.appState.currentView === 'categories') {
+                  renderCategories();
+                } else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) {
+                  openCategory(window.appState.selectedCat.id);
+                } else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) {
+                  openSubCategory(window.appState.selectedSubCat.id);
+                }
+              }
+            }
+          } else {
+            // Создаём документ на сервере
+            saveCatalogToCloud();
           }
-        }
-      } catch (e) {
-        updateSyncStatus('🟡 Облако: Локальный режим');
+
+          updateSyncStatus('🟢 Облако: Синхронизировано у всех');
+
+          if (!document.getElementById('admin-modal').classList.contains('hidden')) {
+            renderAdminList();
+          }
+        }, (error) => {
+          console.error("Ошибка подписки Firestore:", error);
+          updateSyncStatus('🔴 Ошибка доступа Firestore');
+          alert('Ошибка доступа к Firebase: ' + error.message + '. Проверьте правила Firestore Rules!');
+        });
+      } catch (error) {
+        console.error('Ошибка входа в Firebase:', error);
+        updateSyncStatus('🔴 Ошибка входа в облако');
       }
     }
 
-    // Сохранение изменений Администратора в глобальное облако
+    // СОХРАНЕНИЕ ИЗМЕНЕНИЙ В ОБЛАКО В РЕАЛЬНОМ ВРЕМЕНИ
     async function saveCatalogToCloud() {
+      if (!isCloudReady) {
+        alert('Ключи Firebase не настроены! Изменения не увидят другие пользователи.');
+        return false;
+      }
+
       updateSyncStatus('⏳ Сохранение в облако...');
 
-      let success = false;
-
-      // Сохраняем в Firebase если он включен
-      if (isFirebaseActive && catalogDocRef) {
-        try {
-          await setDoc(catalogDocRef, {
-            categories: window.appState.categories,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-          success = true;
-        } catch (e) {
-          console.error("Firebase write error:", e);
-        }
-      }
-
-      // Всегда сохраняем в резервное Облако REST API для гарантированного отображения у ВСЕХ пользователей
       try {
-        await fetch(`https://kvdb.io/4yC8M3y84M3pP211velix/${PUBLIC_KV_STORE_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(window.appState.categories)
-        });
-        success = true;
-      } catch (e) {
-        console.error("REST write error:", e);
-      }
+        await setDoc(catalogDocRef, {
+          categories: window.appState.categories,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
 
-      if (success) {
         updateSyncStatus('🟢 Облако: Сохранено у всех!');
         return true;
-      } else {
+      } catch (error) {
+        console.error('Ошибка записи в Firestore:', error);
         updateSyncStatus('🔴 Ошибка сохранения');
-        alert('Не удалось сохранить изменения в облако. Проверьте интернет.');
+        alert('Не удалось сохранить данные в облако: ' + error.message);
         return false;
       }
     }
@@ -973,7 +935,7 @@
       }
     };
 
-    // Запуск приложения и синхронизация со всеми пользователями
+    // Старт синхронизации
     window.onload = function() {
       syncCatalogFromCloud();
     };
