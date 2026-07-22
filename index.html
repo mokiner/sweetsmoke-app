@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SweetSmoke Web App</title>
+  <title>VELIX Web App</title>
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Tailwind CSS -->
@@ -51,29 +51,23 @@
 <body class="pb-24">
 
   <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
-    <!-- Шапка приложения с Хлебными Крошками и Админ-Кнопкой -->
+    <!-- Шапка приложения с Хлебными Крошками и Скрытой Кнопкой Управления -->
     <header id="header" class="p-3 border-b border-gray-800 sticky top-0 bg-[#131415]/95 backdrop-blur z-30 flex items-center justify-between">
       <div class="flex items-center space-x-2 overflow-hidden">
         <button id="back-btn" onclick="goBack()" class="hidden text-blue-400 text-sm flex items-center gap-1 font-medium shrink-0">
           <i class="fa-solid fa-chevron-left"></i> Назад
         </button>
-        <!-- Хлебные крошки (Breadcrumbs) -->
+        <!-- Хлебные крошки -->
         <div id="breadcrumbs" class="text-xs font-semibold text-gray-300 truncate">
           Каталог
         </div>
       </div>
 
-      <!-- Кнопка «Управление» (Видна ТОЛЬКО для @beerezka0 и @mokiner) -->
+      <!-- Кнопка «Управление» (Отображается ТОЛЬКО для @beerezka0 и @mokiner) -->
       <button id="admin-btn" onclick="toggleAdminModal()" class="hidden text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1.5 rounded-xl hover:bg-blue-500/20 flex items-center gap-1.5 shrink-0 font-medium">
         <i class="fa-solid fa-gear text-xs"></i> Управление
       </button>
     </header>
-
-    <!-- Переключатель Тестового Администратора (Для проверки без Telegram API) -->
-    <div id="demo-admin-toggle" class="bg-gray-900 px-3 py-1.5 text-[11px] text-gray-400 flex items-center justify-between border-b border-gray-800">
-      <span id="user-status-text">Пользователь: Гость</span>
-      <button onclick="toggleDemoUser()" class="text-blue-400 font-bold underline">Сменить юзера</button>
-    </div>
 
     <!-- Главная область контента -->
     <main id="main-content" class="p-3 flex-1">
@@ -101,7 +95,7 @@
       <!-- Оформление заказа -->
       <div id="view-checkout" class="hidden space-y-3"></div>
 
-      <!-- Поиск -->
+      <!-- Результаты поиска -->
       <div id="view-search" class="hidden grid grid-cols-2 gap-3"></div>
     </main>
 
@@ -124,7 +118,7 @@
         <i class="fa-regular fa-heart text-base"></i>
         <span>Избранное</span>
       </button>
-      <button onclick="alert('Профиль: ' + (currentUsername || 'Гость'))" class="flex flex-col items-center gap-1">
+      <button onclick="alert('Профиль Telegram')" class="flex flex-col items-center gap-1">
         <i class="fa-regular fa-user text-base"></i>
         <span>Профиль</span>
       </button>
@@ -135,22 +129,20 @@
     </nav>
   </div>
 
-  <!-- Модальное Окно Управления (Админка) -->
+  <!-- Модальное Окно Управления (Панель Админа) -->
   <div id="admin-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex flex-col p-4">
     <div class="bg-[#1c1d1e] rounded-2xl flex-1 p-4 flex flex-col overflow-hidden max-w-md w-full mx-auto border border-gray-800">
       <div class="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
         <h2 class="text-sm font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-blue-400"></i> Панель управления каталогом
+          <i class="fa-solid fa-sliders text-blue-400"></i> Управление каталогом
         </h2>
         <button onclick="toggleAdminModal()" class="text-gray-400 text-xl hover:text-white">&times;</button>
       </div>
 
-      <!-- Хлебные крошки управления -->
       <div id="admin-breadcrumbs" class="text-xs text-blue-400 mb-2 font-medium">
         Категории
       </div>
 
-      <!-- Содержимое текущего уровня управления -->
       <div id="admin-list" class="flex-1 overflow-y-auto space-y-2 pr-1 my-2"></div>
 
       <div class="pt-3 border-t border-gray-800 flex gap-2">
@@ -164,11 +156,11 @@
     </div>
   </div>
 
-  <!-- Модальное окно создания / редактирования элемента -->
+  <!-- Модальное окно создания элемента -->
   <div id="form-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col p-4">
     <div class="bg-[#1c1d1e] rounded-2xl p-4 my-auto max-w-md w-full mx-auto space-y-3 border border-gray-800">
       <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-        <h3 id="form-title" class="text-sm font-bold text-white">Добавить новый элемент</h3>
+        <h3 id="form-title" class="text-sm font-bold text-white">Добавить элемент</h3>
         <button onclick="closeFormModal()" class="text-gray-400 text-xl">&times;</button>
       </div>
 
@@ -181,13 +173,13 @@
         <label class="text-[11px] text-gray-400 block mb-1">Ссылка на фото (URL) *</label>
         <input type="text" id="form-image-input" placeholder="https://..." class="w-full tg-input rounded-xl p-2.5 text-xs">
         <div class="flex gap-1.5 mt-1.5 overflow-x-auto no-scrollbar">
-          <button onclick="setFormImage('https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60')" class="text-[10px] bg-gray-800 text-gray-300 px-2 py-1 rounded-lg shrink-0">Фото 1</button>
-          <button onclick="setFormImage('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=60')" class="text-[10px] bg-gray-800 text-gray-300 px-2 py-1 rounded-lg shrink-0">Фото 2</button>
-          <button onclick="setFormImage('https://images.unsplash.com/photo-1560807707-8cc77767d783?w=300&auto=format&fit=crop&q=60')" class="text-[10px] bg-gray-800 text-gray-300 px-2 py-1 rounded-lg shrink-0">Фото 3</button>
+          <button type="button" onclick="setFormImage('https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60')" class="text-[10px] bg-gray-800 text-gray-300 px-2 py-1 rounded-lg shrink-0">Картинка 1</button>
+          <button type="button" onclick="setFormImage('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=60')" class="text-[10px] bg-gray-800 text-gray-300 px-2 py-1 rounded-lg shrink-0">Картинка 2</button>
+          <button type="button" onclick="setFormImage('https://images.unsplash.com/photo-1560807707-8cc77767d783?w=300&auto=format&fit=crop&q=60')" class="text-[10px] bg-gray-800 text-gray-300 px-2 py-1 rounded-lg shrink-0">Картинка 3</button>
         </div>
       </div>
 
-      <!-- Поля только для товаров (3-й уровень) -->
+      <!-- Поля для разновидности товара -->
       <div id="product-extra-fields" class="hidden space-y-3">
         <div>
           <label class="text-[11px] text-gray-400 block mb-1">Цена (Br) *</label>
@@ -200,30 +192,61 @@
       </div>
 
       <div class="flex gap-2 pt-2">
-        <button onclick="closeFormModal()" class="flex-1 bg-gray-800 text-gray-300 text-xs py-2.5 rounded-xl font-medium">Отмена</button>
-        <button onclick="saveFormElement()" class="flex-1 bg-blue-600 text-white text-xs py-2.5 rounded-xl font-bold">Сохранить</button>
+        <button type="button" onclick="closeFormModal()" class="flex-1 bg-gray-800 text-gray-300 text-xs py-2.5 rounded-xl font-medium">Отмена</button>
+        <button type="button" onclick="saveFormElement()" class="flex-1 bg-blue-600 text-white text-xs py-2.5 rounded-xl font-bold">Сохранить</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // Разрешенные Администраторы Telegram
-    const ALLOWED_ADMINS = ['beerezka0', 'mokiner'];
+  <!-- Firebase SDK для работы с Облаком в реальном времени -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Текущий юзернейм из Telegram SDK или демо-режима
+    // Инициализация Telegram SDK
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.expand();
       tg.enableClosingConfirmation();
     }
 
-    let currentUsername = tg?.initDataUnsafe?.user?.username || 'mokiner'; // По умолчанию для демо
-    let adminLevel = 'categories'; // 'categories' | 'subcategories' | 'products'
-    let selectedAdminCatId = null;
-    let selectedAdminSubCatId = null;
+    // Список разрешенных юзеров-администраторов
+    const ADMIN_USERS = ['beerezka0', 'mokiner'];
+    const tgUser = tg?.initDataUnsafe?.user;
+    const currentUsername = (tgUser?.username || '').replace('@', '').trim().toLowerCase();
+    const isAdmin = ADMIN_USERS.map(u => u.toLowerCase()).includes(currentUsername);
 
-    // Главное состояние каталога (3 Уровня)
-    let state = {
+    // Проверка отображения кнопки «Управление»
+    if (isAdmin) {
+      document.getElementById('admin-btn').classList.remove('hidden');
+    } else {
+      document.getElementById('admin-btn').classList.add('hidden');
+    }
+
+    // Заглушка для битых ссылок на фото
+    const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60';
+
+    // Firebase конфигурация для облачного хранения
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "demo",
+      authDomain: "demo.firebaseapp.com",
+      projectId: "demo-project",
+      storageBucket: "demo.appspot.com",
+      messagingSenderId: "123456",
+      appId: "1:123456:web:123456"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'velix-store-app';
+
+    // Путь к документу с общим каталогом в базе данных
+    const catalogDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'main');
+
+    // Состояние приложения
+    window.appState = {
       categories: [
         {
           id: 'cat_chewing',
@@ -240,37 +263,16 @@
                   title: 'Glitch (150 mg)',
                   price: 13,
                   image: 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=400&auto=format&fit=crop&q=60',
-                  description: 'Мощная жевательная смесь Glitch 150mg с яркими освежающими вкусами.',
-                  variants: [
-                    { name: 'Полярная Мята', stock: 5 },
-                    { name: 'Двойная Мята', stock: 2 },
-                    { name: 'Эвкалипт Мята', stock: 0 }
-                  ]
+                  description: 'Мощная жевательная смесь Glitch 150mg.',
+                  variants: [{ name: 'Полярная Мята', stock: 5 }]
                 },
                 {
                   id: 'prod_glitch_75',
                   title: 'Glitch (75 mg)',
                   price: 13,
                   image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&auto=format&fit=crop&q=60',
-                  description: 'Сбалансированная крепость 75mg для повседневного использования.',
-                  variants: [
-                    { name: 'Ледяной Лимон', stock: 4 }
-                  ]
-                }
-              ]
-            },
-            {
-              id: 'sub_zuza',
-              title: 'ZUZA',
-              image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=300&auto=format&fit=crop&q=60',
-              products: [
-                {
-                  id: 'prod_zuza_kiwi',
-                  title: 'ZUZA Kiwi Burn',
-                  price: 14,
-                  image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=400&auto=format&fit=crop&q=60',
-                  description: 'Сочный киви с морозным эффектом.',
-                  variants: [{ name: 'Киви', stock: 3 }]
+                  description: 'Сбалансированная крепость 75mg.',
+                  variants: [{ name: 'Ледяной Лимон', stock: 4 }]
                 }
               ]
             }
@@ -280,99 +282,71 @@
           id: 'cat_pods',
           title: 'POD - системы',
           image: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=300&auto=format&fit=crop&q=60',
-          subcategories: [
-            {
-              id: 'sub_vaporesso',
-              title: 'Vaporesso',
-              image: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=300&auto=format&fit=crop&q=60',
-              products: [
-                {
-                  id: 'prod_xros_3',
-                  title: 'Vaporesso XROS 3 Nano',
-                  price: 85,
-                  image: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400&auto=format&fit=crop&q=60',
-                  description: 'Компактная POD-система с регулировкой обдува и встроенным аккумулятором 1000 mAh.',
-                  variants: [{ name: 'Black', stock: 2 }, { name: 'Silver', stock: 1 }]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 'cat_cartridges',
-          title: 'Картриджи',
-          image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=60',
-          subcategories: []
-        },
-        {
-          id: 'cat_nikoboosters',
-          title: 'Никобустеры',
-          image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=300&auto=format&fit=crop&q=60',
           subcategories: []
         }
       ],
       cart: [],
       currentView: 'categories',
-      history: [],
       selectedCat: null,
       selectedSubCat: null,
       selectedProduct: null,
       selectedVariantIndex: 0
     };
 
-    // Загрузка и сохранение состояния локально
-    function loadState() {
-      const saved = localStorage.getItem('sweet_smoke_3level_store');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          state.categories = parsed.categories || state.categories;
-          state.cart = parsed.cart || [];
-        } catch(e){}
+    let adminLevel = 'categories';
+    let selectedAdminCatId = null;
+    let selectedAdminSubCatId = null;
+
+    // Синхронизация данных из БД в реальном времени у ВСЕХ пользователей
+    async function syncCatalogFromCloud() {
+      try {
+        await signInAnonymously(auth);
+      } catch(e) {}
+
+      onSnapshot(catalogDocRef, (snapshot) => {
+        if (snapshot.exists() && snapshot.data().categories) {
+          window.appState.categories = snapshot.data().categories;
+        } else {
+          // Если базы ещё нет, запишем дефолтный каталог
+          setDoc(catalogDocRef, { categories: window.appState.categories }, { merge: true });
+        }
+        
+        // Перерисовываем экран
+        if (window.appState.currentView === 'categories') renderCategories();
+        else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) openCategory(window.appState.selectedCat.id);
+        else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) openSubCategory(window.appState.selectedSubCat.id);
+
+        if (!document.getElementById('admin-modal').classList.contains('hidden')) {
+          renderAdminList();
+        }
+      }, (error) => {
+        // Запасной план: загрузка из localStorage если нет соединения с сетью
+        const local = localStorage.getItem('velix_local_catalog');
+        if (local) {
+          try { window.appState.categories = JSON.parse(local).categories; } catch(e){}
+          renderCategories();
+        }
+      });
+    }
+
+    // Запись изменений в облако
+    async function saveCatalogToCloud() {
+      localStorage.setItem('velix_local_catalog', JSON.stringify({ categories: window.appState.categories }));
+      try {
+        await setDoc(catalogDocRef, { categories: window.appState.categories });
+      } catch(e) {
+        console.error("Ошибка сохранения в БД:", e);
       }
-      checkAdminPermission();
-      updateCartBadge();
     }
 
-    function saveState() {
-      localStorage.setItem('sweet_smoke_3level_store', JSON.stringify({
-        categories: state.categories,
-        cart: state.cart
-      }));
-      updateCartBadge();
-    }
-
-    // Проверка прав Администратора
-    function checkAdminPermission() {
-      const adminBtn = document.getElementById('admin-btn');
-      const isAllowed = ALLOWED_ADMINS.includes(currentUsername.replace('@', '').trim());
-
-      document.getElementById('user-status-text').innerText = `Пользователь: @${currentUsername} ${isAllowed ? ' (Админ)' : ''}`;
-
-      if (isAllowed) {
-        adminBtn.classList.remove('hidden');
-      } else {
-        adminBtn.classList.add('hidden');
-      }
-    }
-
-    function toggleDemoUser() {
-      if (currentUsername === 'mokiner') {
-        currentUsername = 'guest_user';
-      } else {
-        currentUsername = 'beerezka0';
-      }
-      checkAdminPermission();
-      renderCategories();
-    }
-
-    // Навигация пользователя
+    // Хлебные крошки
     function updateBreadcrumbs(crumbs = ['Каталог']) {
       document.getElementById('breadcrumbs').innerHTML = crumbs.join(' <span class="text-gray-600 font-normal">&gt;</span> ');
     }
 
-    function navigateTo(view) {
-      state.currentView = view;
+    // Навигация
+    window.navigateTo = function(view) {
+      window.appState.currentView = view;
       const views = ['categories', 'subcategories', 'products', 'detail', 'cart', 'checkout', 'search'];
       views.forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
       document.getElementById(`view-${view}`).classList.remove('hidden');
@@ -390,66 +364,69 @@
       } else {
         searchBox.classList.remove('hidden');
       }
-    }
+    };
 
-    function goBack() {
-      if (state.currentView === 'subcategories') {
+    window.goBack = function() {
+      if (window.appState.currentView === 'subcategories') {
         renderCategories();
-      } else if (state.currentView === 'products') {
-        openCategory(state.selectedCat.id);
-      } else if (state.currentView === 'detail') {
-        openSubCategory(state.selectedSubCat.id);
+      } else if (window.appState.currentView === 'products') {
+        openCategory(window.appState.selectedCat.id);
+      } else if (window.appState.currentView === 'detail') {
+        openSubCategory(window.appState.selectedSubCat.id);
       } else {
         renderCategories();
       }
-    }
+    };
 
-    function switchTab(tab) {
+    window.switchTab = function(tab) {
       if (tab === 'catalog') {
         renderCategories();
       } else if (tab === 'search') {
         document.getElementById('search-input').focus();
-        navigateTo('search');
+        window.navigateTo('search');
         updateBreadcrumbs(['Каталог', 'Поиск']);
       } else if (tab === 'cart') {
         renderCart();
       }
-    }
+    };
 
-    // РЕНДЕР УРОВНЯ 1: Категории
-    function renderCategories() {
-      state.selectedCat = null;
-      state.selectedSubCat = null;
-      state.selectedProduct = null;
+    // Рендер Уровня 1 (Категории)
+    window.renderCategories = function() {
+      window.appState.selectedCat = null;
+      window.appState.selectedSubCat = null;
 
       const container = document.getElementById('view-categories');
-      container.innerHTML = state.categories.map(cat => `
-        <div onclick="openCategory('${cat.id}')" class="tg-card p-3 rounded-2xl flex flex-col items-center text-center cursor-pointer hover:opacity-90 transition">
-          <div class="w-full h-32 rounded-xl mb-2 overflow-hidden bg-gray-800 flex items-center justify-center">
-            <img src="${cat.image}" class="w-full h-full object-cover" alt="${cat.title}" onerror="this.src='https://via.placeholder.com/150'">
+      if (!window.appState.categories || window.appState.categories.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Каталог пуст</div>`;
+      } else {
+        container.innerHTML = window.appState.categories.map(cat => `
+          <div onclick="openCategory('${cat.id}')" class="tg-card p-3 rounded-2xl flex flex-col items-center text-center cursor-pointer hover:opacity-90 transition">
+            <div class="w-full h-32 rounded-xl mb-2 overflow-hidden bg-gray-800 flex items-center justify-center">
+              <img src="${cat.image}" class="w-full h-full object-cover" alt="${cat.title}" onerror="this.src='${FALLBACK_IMAGE}'">
+            </div>
+            <span class="text-xs font-semibold text-gray-200 mt-1 line-clamp-1">${cat.title}</span>
           </div>
-          <span class="text-xs font-semibold text-gray-200 mt-1 line-clamp-1">${cat.title}</span>
-        </div>
-      `).join('');
+        `).join('');
+      }
 
       updateBreadcrumbs(['Каталог']);
-      navigateTo('categories');
-    }
+      window.navigateTo('categories');
+    };
 
-    // РЕНДЕР УРОВНЯ 2: Виды Категории
-    function openCategory(catId) {
-      const cat = state.categories.find(c => c.id === catId);
+    // Рендер Уровня 2 (Виды категории)
+    window.openCategory = function(catId) {
+      const cat = window.appState.categories.find(c => c.id === catId);
       if (!cat) return;
-      state.selectedCat = cat;
+      window.appState.selectedCat = cat;
 
       const container = document.getElementById('view-subcategories');
-      if (cat.subcategories.length === 0) {
-        container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Разделы скоро появятся</div>`;
+      if (!cat.subcategories || cat.subcategories.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-10 text-sm">В этом разделе пока нет видов</div>`;
       } else {
         container.innerHTML = cat.subcategories.map(sub => `
           <div onclick="openSubCategory('${sub.id}')" class="tg-card p-3 rounded-2xl flex flex-col items-center text-center cursor-pointer hover:opacity-90 transition">
             <div class="w-full h-32 rounded-xl mb-2 overflow-hidden bg-gray-800 flex items-center justify-center">
-              <img src="${sub.image}" class="w-full h-full object-cover" alt="${sub.title}" onerror="this.src='https://via.placeholder.com/150'">
+              <img src="${sub.image}" class="w-full h-full object-cover" alt="${sub.title}" onerror="this.src='${FALLBACK_IMAGE}'">
             </div>
             <span class="text-xs font-semibold text-gray-200 mt-1 line-clamp-1">${sub.title}</span>
           </div>
@@ -457,24 +434,24 @@
       }
 
       updateBreadcrumbs(['Каталог', cat.title]);
-      navigateTo('subcategories');
-    }
+      window.navigateTo('subcategories');
+    };
 
-    // РЕНДЕР УРОВНЯ 3: Разновидности / Товары
-    function openSubCategory(subCatId) {
-      const sub = state.selectedCat?.subcategories.find(s => s.id === subCatId);
+    // Рендер Уровня 3 (Разновидности товаров)
+    window.openSubCategory = function(subCatId) {
+      const sub = window.appState.selectedCat?.subcategories.find(s => s.id === subCatId);
       if (!sub) return;
-      state.selectedSubCat = sub;
+      window.appState.selectedSubCat = sub;
 
       const container = document.getElementById('view-products');
-      if (sub.products.length === 0) {
-        container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Товары скоро появятся</div>`;
+      if (!sub.products || sub.products.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-10 text-sm">В этом виде товаров нет</div>`;
       } else {
         container.innerHTML = sub.products.map(prod => `
           <div onclick="openProductDetail('${prod.id}')" class="tg-card p-3 rounded-2xl flex flex-col justify-between cursor-pointer">
             <div>
               <div class="w-full h-32 rounded-xl overflow-hidden bg-gray-800 mb-2">
-                <img src="${prod.image}" class="w-full h-full object-cover" alt="${prod.title}">
+                <img src="${prod.image}" class="w-full h-full object-cover" alt="${prod.title}" onerror="this.src='${FALLBACK_IMAGE}'">
               </div>
               <h3 class="text-xs font-semibold text-white leading-tight line-clamp-2">${prod.title}</h3>
             </div>
@@ -488,44 +465,27 @@
         `).join('');
       }
 
-      updateBreadcrumbs(['Каталог', state.selectedCat.title, sub.title]);
-      navigateTo('products');
-    }
+      updateBreadcrumbs(['Каталог', window.appState.selectedCat.title, sub.title]);
+      window.navigateTo('products');
+    };
 
-    // РЕНДЕР ДЕТАЛЬНОЙ КАРТОЧКИ ТОВАРА
-    function openProductDetail(prodId) {
-      const prod = state.selectedSubCat?.products.find(p => p.id === prodId);
+    // Карточка товара
+    window.openProductDetail = function(prodId) {
+      const prod = window.appState.selectedSubCat?.products.find(p => p.id === prodId);
       if (!prod) return;
-      state.selectedProduct = prod;
-      state.selectedVariantIndex = 0;
-
-      const selectedVar = prod.variants[0];
-      const inStock = selectedVar ? selectedVar.stock : 0;
+      window.appState.selectedProduct = prod;
 
       const container = document.getElementById('view-detail');
       container.innerHTML = `
         <div class="space-y-4">
           <div class="w-full h-64 bg-gray-800 rounded-2xl overflow-hidden">
-            <img src="${prod.image}" class="w-full h-full object-cover">
+            <img src="${prod.image}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
           </div>
 
           <div>
             <h1 class="text-lg font-bold text-white">${prod.title}</h1>
-            <p class="text-xs text-gray-400 mt-1">${prod.description || 'Нет описания'}</p>
+            <p class="text-xs text-gray-400 mt-1">${prod.description || 'Описание отсутствует'}</p>
           </div>
-
-          ${prod.variants.length > 0 ? `
-            <div>
-              <span class="text-xs text-gray-400 block mb-2">Выберите вариант:</span>
-              <div class="flex flex-wrap gap-2">
-                ${prod.variants.map((v, idx) => `
-                  <button onclick="selectVariant(${idx})" class="px-3 py-2 rounded-xl text-xs font-medium border ${idx === state.selectedVariantIndex ? 'border-blue-500 bg-blue-500/20 text-white' : 'border-gray-800 bg-[#1c1d1e] text-gray-400'} ${v.stock === 0 ? 'opacity-40' : ''}">
-                    ${v.name} (${v.stock} шт.)
-                  </button>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
 
           <div class="fixed bottom-14 left-0 right-0 max-w-md mx-auto px-4 py-2 bg-[#131415]/90 backdrop-blur border-t border-gray-800">
             <button onclick="addToCart()" class="w-full tg-btn-primary py-3 rounded-xl font-bold text-sm flex justify-between px-4 items-center">
@@ -536,43 +496,35 @@
         </div>
       `;
 
-      updateBreadcrumbs(['Каталог', state.selectedCat.title, state.selectedSubCat.title, prod.title]);
-      navigateTo('detail');
-    }
+      updateBreadcrumbs(['Каталог', window.appState.selectedCat.title, window.appState.selectedSubCat.title, prod.title]);
+      window.navigateTo('detail');
+    };
 
-    function selectVariant(idx) {
-      state.selectedVariantIndex = idx;
-      openProductDetail(state.selectedProduct.id);
-    }
-
-    // КОРЗИНА
-    function addToCart() {
-      const prod = state.selectedProduct;
-      const variant = prod.variants[state.selectedVariantIndex] || { name: 'Стандарт', stock: 5 };
-
-      const existing = state.cart.find(i => i.prodId === prod.id && i.variantName === variant.name);
+    // Корзина
+    window.addToCart = function() {
+      const prod = window.appState.selectedProduct;
+      const existing = window.appState.cart.find(i => i.prodId === prod.id);
       if (existing) {
         existing.quantity += 1;
       } else {
-        state.cart.push({
+        window.appState.cart.push({
           prodId: prod.id,
           title: prod.title,
-          variantName: variant.name,
           price: prod.price,
           image: prod.image,
           quantity: 1
         });
       }
 
-      saveState();
+      updateCartBadge();
       alert('Товар добавлен в корзину!');
-    }
+    };
 
     function renderCart() {
       const container = document.getElementById('view-cart');
-      const totalSum = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const totalSum = window.appState.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-      if (state.cart.length === 0) {
+      if (window.appState.cart.length === 0) {
         container.innerHTML = `
           <div class="text-center py-16 text-gray-500">
             <i class="fa-solid fa-basket-shopping text-4xl mb-3"></i>
@@ -580,18 +532,18 @@
             <button onclick="switchTab('catalog')" class="mt-4 tg-btn-primary px-4 py-2 rounded-xl text-xs font-semibold">В каталог</button>
           </div>
         `;
-        navigateTo('cart');
+        window.navigateTo('cart');
         return;
       }
 
       container.innerHTML = `
         <div class="space-y-3">
-          ${state.cart.map((item, idx) => `
+          ${window.appState.cart.map((item, idx) => `
             <div class="tg-card p-3 rounded-xl flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <img src="${item.image}" class="w-12 h-12 object-cover rounded-lg bg-gray-800">
+                <img src="${item.image}" class="w-12 h-12 object-cover rounded-lg bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
                 <div>
-                  <h4 class="text-xs font-bold text-blue-400 line-clamp-1">${item.title} (${item.variantName})</h4>
+                  <h4 class="text-xs font-bold text-blue-400 line-clamp-1">${item.title}</h4>
                   <p class="text-[11px] text-gray-400">${item.price} Br</p>
                 </div>
               </div>
@@ -614,19 +566,19 @@
         </button>
       `;
       updateBreadcrumbs(['Каталог', 'Корзина']);
-      navigateTo('cart');
+      window.navigateTo('cart');
     }
 
-    function updateCartQty(idx, delta) {
-      state.cart[idx].quantity += delta;
-      if (state.cart[idx].quantity <= 0) state.cart.splice(idx, 1);
-      saveState();
+    window.updateCartQty = function(idx, delta) {
+      window.appState.cart[idx].quantity += delta;
+      if (window.appState.cart[idx].quantity <= 0) window.appState.cart.splice(idx, 1);
+      updateCartBadge();
       renderCart();
-    }
+    };
 
     function updateCartBadge() {
       const badge = document.getElementById('cart-badge');
-      const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+      const count = window.appState.cart.reduce((sum, item) => sum + item.quantity, 0);
       if (count > 0) {
         badge.innerText = count;
         badge.classList.remove('hidden');
@@ -635,7 +587,7 @@
       }
     }
 
-    function openCheckout() {
+    window.openCheckout = function() {
       const container = document.getElementById('view-checkout');
       container.innerHTML = `
         <form onsubmit="submitOrder(event)" class="space-y-3">
@@ -643,43 +595,43 @@
           <input type="text" id="order-name" required placeholder="Ваше Имя" class="w-full tg-input p-3 rounded-xl text-xs">
           <input type="tel" id="order-phone" required placeholder="Телефон +" class="w-full tg-input p-3 rounded-xl text-xs">
           <button type="submit" class="w-full tg-btn-primary py-3 rounded-xl font-bold text-xs mt-4">
-            Отправить заказ в Telegram
+            Отправить заказ
           </button>
         </form>
       `;
       updateBreadcrumbs(['Каталог', 'Оформление']);
-      navigateTo('checkout');
-    }
+      window.navigateTo('checkout');
+    };
 
-    function submitOrder(e) {
+    window.submitOrder = function(e) {
       e.preventDefault();
       const payload = {
         name: document.getElementById('order-name').value,
         phone: document.getElementById('order-phone').value,
         address: document.getElementById('order-address').value,
-        cart: state.cart,
-        total: state.cart.reduce((s, i) => s + (i.price * i.quantity), 0)
+        cart: window.appState.cart,
+        total: window.appState.cart.reduce((s, i) => s + (i.price * i.quantity), 0)
       };
 
       if (tg && tg.sendData) {
         tg.sendData(JSON.stringify(payload));
       } else {
-        alert('Заказ отправлен! Спасибо.');
+        alert('Заказ успешно создан!');
       }
 
-      state.cart = [];
-      saveState();
+      window.appState.cart = [];
+      updateCartBadge();
       renderCategories();
-    }
+    };
 
-    function handleSearch() {
+    window.handleSearch = function() {
       const q = document.getElementById('search-input').value.toLowerCase().trim();
       if (!q) { renderCategories(); return; }
 
       const results = [];
-      state.categories.forEach(c => {
-        c.subcategories.forEach(s => {
-          s.products.forEach(p => {
+      window.appState.categories.forEach(c => {
+        (c.subcategories || []).forEach(s => {
+          (s.products || []).forEach(p => {
             if (p.title.toLowerCase().includes(q)) results.push(p);
           });
         });
@@ -692,7 +644,7 @@
         container.innerHTML = results.map(prod => `
           <div onclick="openProductDetail('${prod.id}')" class="tg-card p-3 rounded-2xl flex flex-col justify-between cursor-pointer">
             <div class="w-full h-28 rounded-xl overflow-hidden bg-gray-800 mb-2">
-              <img src="${prod.image}" class="w-full h-full object-cover">
+              <img src="${prod.image}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
             </div>
             <h3 class="text-xs font-semibold text-white leading-tight line-clamp-2">${prod.title}</h3>
             <span class="text-xs font-bold text-blue-400 mt-2">${prod.price} Br</span>
@@ -701,14 +653,14 @@
       }
 
       updateBreadcrumbs(['Каталог', 'Поиск']);
-      navigateTo('search');
-    }
+      window.navigateTo('search');
+    };
 
     // ==========================================
-    // ЛОГИКА УПРАВЛЕНИЯ (АДМИН-ПАНЕЛЬ С 3 УРОВНЯМИ)
+    // ПАНЕЛЬ УПРАВЛЕНИЯ (АДМИНКА С 3 УРОВНЯМИ)
     // ==========================================
 
-    function toggleAdminModal() {
+    window.toggleAdminModal = function() {
       const modal = document.getElementById('admin-modal');
       modal.classList.toggle('hidden');
       if (!modal.classList.contains('hidden')) {
@@ -719,7 +671,7 @@
       } else {
         renderCategories();
       }
-    }
+    };
 
     function renderAdminList() {
       const container = document.getElementById('admin-list');
@@ -727,13 +679,17 @@
 
       if (adminLevel === 'categories') {
         breadcrumbs.innerHTML = `Уровень 1: <span class="text-white">Все Категории</span>`;
-        container.innerHTML = state.categories.map(cat => `
+        if (!window.appState.categories || window.appState.categories.length === 0) {
+          container.innerHTML = `<div class="text-center text-gray-500 py-4 text-xs">Категорий нет. Нажмите «Добавить» ниже.</div>`;
+          return;
+        }
+        container.innerHTML = window.appState.categories.map(cat => `
           <div class="bg-[#242526] p-3 rounded-xl flex items-center justify-between">
             <div onclick="enterAdminSubCategories('${cat.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
-              <img src="${cat.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800">
+              <img src="${cat.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div>
                 <h4 class="text-xs font-bold text-white">${cat.title}</h4>
-                <p class="text-[10px] text-gray-400">${cat.subcategories.length} видов категорий &gt;</p>
+                <p class="text-[10px] text-gray-400">${(cat.subcategories || []).length} видов &gt;</p>
               </div>
             </div>
             <button onclick="deleteCategory('${cat.id}')" class="text-red-400 text-xs px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 rounded-lg ml-2">
@@ -743,16 +699,22 @@
         `).join('');
       } 
       else if (adminLevel === 'subcategories') {
-        const cat = state.categories.find(c => c.id === selectedAdminCatId);
-        breadcrumbs.innerHTML = `<span onclick="adminLevel='categories'; renderAdminList()" class="underline cursor-pointer">Категории</span> &gt; <span class="text-white">${cat.title}</span>`;
+        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
+        breadcrumbs.innerHTML = `<span onclick="setAdminLevel('categories')" class="underline cursor-pointer">Категории</span> &gt; <span class="text-white">${cat?.title || ''}</span>`;
         
-        container.innerHTML = cat.subcategories.map(sub => `
+        const subs = cat?.subcategories || [];
+        if (subs.length === 0) {
+          container.innerHTML = `<div class="text-center text-gray-500 py-4 text-xs">Видов нет. Нажмите «Добавить» ниже.</div>`;
+          return;
+        }
+
+        container.innerHTML = subs.map(sub => `
           <div class="bg-[#242526] p-3 rounded-xl flex items-center justify-between">
             <div onclick="enterAdminProducts('${sub.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
-              <img src="${sub.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800">
+              <img src="${sub.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div>
                 <h4 class="text-xs font-bold text-white">${sub.title}</h4>
-                <p class="text-[10px] text-gray-400">${sub.products.length} разновидностей &gt;</p>
+                <p class="text-[10px] text-gray-400">${(sub.products || []).length} товаров &gt;</p>
               </div>
             </div>
             <button onclick="deleteSubCategory('${sub.id}')" class="text-red-400 text-xs px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 rounded-lg ml-2">
@@ -762,14 +724,20 @@
         `).join('');
       } 
       else if (adminLevel === 'products') {
-        const cat = state.categories.find(c => c.id === selectedAdminCatId);
-        const sub = cat.subcategories.find(s => s.id === selectedAdminSubCatId);
-        breadcrumbs.innerHTML = `<span onclick="adminLevel='categories'; renderAdminList()" class="underline cursor-pointer">Категории</span> &gt; <span onclick="adminLevel='subcategories'; renderAdminList()" class="underline cursor-pointer">${cat.title}</span> &gt; <span class="text-white">${sub.title}</span>`;
+        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
+        const sub = cat?.subcategories?.find(s => s.id === selectedAdminSubCatId);
+        breadcrumbs.innerHTML = `<span onclick="setAdminLevel('categories')" class="underline cursor-pointer">Категории</span> &gt; <span onclick="setAdminLevel('subcategories')" class="underline cursor-pointer">${cat?.title || ''}</span> &gt; <span class="text-white">${sub?.title || ''}</span>`;
 
-        container.innerHTML = sub.products.map(prod => `
+        const prods = sub?.products || [];
+        if (prods.length === 0) {
+          container.innerHTML = `<div class="text-center text-gray-500 py-4 text-xs">Товаров нет. Нажмите «Добавить» ниже.</div>`;
+          return;
+        }
+
+        container.innerHTML = prods.map(prod => `
           <div class="bg-[#242526] p-3 rounded-xl flex items-center justify-between">
             <div class="flex items-center gap-3 flex-1">
-              <img src="${prod.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800">
+              <img src="${prod.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div>
                 <h4 class="text-xs font-bold text-white">${prod.title}</h4>
                 <p class="text-[10px] text-blue-400 font-bold">${prod.price} Br</p>
@@ -783,52 +751,57 @@
       }
     }
 
-    function enterAdminSubCategories(catId) {
+    window.setAdminLevel = function(level) {
+      adminLevel = level;
+      renderAdminList();
+    };
+
+    window.enterAdminSubCategories = function(catId) {
       selectedAdminCatId = catId;
       adminLevel = 'subcategories';
       renderAdminList();
-    }
+    };
 
-    function enterAdminProducts(subCatId) {
+    window.enterAdminProducts = function(subCatId) {
       selectedAdminSubCatId = subCatId;
       adminLevel = 'products';
       renderAdminList();
-    }
+    };
 
-    // УДАЛЕНИЕ ЭЛЕМЕНТОВ
-    function deleteCategory(catId) {
-      if (confirm('Удалить эту категорию? Все её виды и товары также удалятся.')) {
-        state.categories = state.categories.filter(c => c.id !== catId);
-        saveState();
+    // Удаление
+    window.deleteCategory = function(catId) {
+      if (confirm('Удалить эту категорию? Все её виды и товары тоже удалятся.')) {
+        window.appState.categories = window.appState.categories.filter(c => c.id !== catId);
+        saveCatalogToCloud();
         renderAdminList();
       }
-    }
+    };
 
-    function deleteSubCategory(subId) {
+    window.deleteSubCategory = function(subId) {
       if (confirm('Удалить этот вид категории?')) {
-        const cat = state.categories.find(c => c.id === selectedAdminCatId);
+        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
         if (cat) {
           cat.subcategories = cat.subcategories.filter(s => s.id !== subId);
-          saveState();
+          saveCatalogToCloud();
           renderAdminList();
         }
       }
-    }
+    };
 
-    function deleteProduct(prodId) {
+    window.deleteProduct = function(prodId) {
       if (confirm('Удалить эту разновидность товара?')) {
-        const cat = state.categories.find(c => c.id === selectedAdminCatId);
-        const sub = cat?.subcategories.find(s => s.id === selectedAdminSubCatId);
+        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
+        const sub = cat?.subcategories?.find(s => s.id === selectedAdminSubCatId);
         if (sub) {
           sub.products = sub.products.filter(p => p.id !== prodId);
-          saveState();
+          saveCatalogToCloud();
           renderAdminList();
         }
       }
-    }
+    };
 
-    // СОЗДАНИЕ ЭЛЕМЕНТОВ (МОДАЛЬНОЕ ОКНО)
-    function openAddModal() {
+    // Модальное окно добавления
+    window.openAddModal = function() {
       document.getElementById('form-title-input').value = '';
       document.getElementById('form-image-input').value = '';
       document.getElementById('form-price-input').value = '';
@@ -849,19 +822,19 @@
       }
 
       document.getElementById('form-modal').classList.remove('hidden');
-    }
+    };
 
-    function closeFormModal() {
+    window.closeFormModal = function() {
       document.getElementById('form-modal').classList.add('hidden');
-    }
+    };
 
-    function setFormImage(url) {
+    window.setFormImage = function(url) {
       document.getElementById('form-image-input').value = url;
-    }
+    };
 
-    function saveFormElement() {
+    window.saveFormElement = function() {
       const title = document.getElementById('form-title-input').value.trim();
-      const image = document.getElementById('form-image-input').value.trim() || 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60';
+      const image = document.getElementById('form-image-input').value.trim() || FALLBACK_IMAGE;
 
       if (!title) {
         alert('Введите название!');
@@ -869,7 +842,7 @@
       }
 
       if (adminLevel === 'categories') {
-        state.categories.push({
+        window.appState.categories.push({
           id: 'cat_' + Date.now(),
           title,
           image,
@@ -877,8 +850,9 @@
         });
       } 
       else if (adminLevel === 'subcategories') {
-        const cat = state.categories.find(c => c.id === selectedAdminCatId);
+        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
         if (cat) {
+          if (!cat.subcategories) cat.subcategories = [];
           cat.subcategories.push({
             id: 'sub_' + Date.now(),
             title,
@@ -891,30 +865,29 @@
         const price = Number(document.getElementById('form-price-input').value) || 10;
         const description = document.getElementById('form-desc-input').value.trim();
 
-        const cat = state.categories.find(c => c.id === selectedAdminCatId);
-        const sub = cat?.subcategories.find(s => s.id === selectedAdminSubCatId);
+        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
+        const sub = cat?.subcategories?.find(s => s.id === selectedAdminSubCatId);
 
         if (sub) {
+          if (!sub.products) sub.products = [];
           sub.products.push({
             id: 'prod_' + Date.now(),
             title,
             image,
             price,
-            description,
-            variants: [{ name: 'Стандарт', stock: 5 }]
+            description
           });
         }
       }
 
-      saveState();
+      saveCatalogToCloud();
       closeFormModal();
       renderAdminList();
-    }
+    };
 
-    // Инициализация
+    // Запуск приложения
     window.onload = function() {
-      loadState();
-      renderCategories();
+      syncCatalogFromCloud();
     };
   </script>
 </body>
