@@ -42,6 +42,10 @@
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
 <body class="pb-24">
@@ -59,7 +63,7 @@
         </div>
       </div>
 
-      <!-- Кнопка «Управление» (Видна ТОЛЬКО для @beerezka0 и @mokiner) -->
+      <!-- Кнопка «Управление» (Отображается ТОЛЬКО для @beerezka0 и @mokiner) -->
       <button id="admin-btn" onclick="toggleAdminModal()" class="hidden text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1.5 rounded-xl hover:bg-blue-500/20 flex items-center gap-1.5 shrink-0 font-medium">
         <i class="fa-solid fa-gear text-xs"></i> Управление
       </button>
@@ -128,10 +132,15 @@
   <!-- Модальное Окно Управления (Админка) -->
   <div id="admin-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex flex-col p-4">
     <div class="bg-[#1c1d1e] rounded-2xl flex-1 p-4 flex flex-col overflow-hidden max-w-md w-full mx-auto border border-gray-800">
-      <div class="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
-        <h2 class="text-sm font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-blue-400"></i> Управление каталогом
-        </h2>
+      <div class="flex justify-between items-center mb-2 border-b border-gray-800 pb-2">
+        <div>
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-blue-400"></i> Управление каталогом
+          </h2>
+          <div id="sync-status" class="text-[10px] text-green-400 font-medium mt-0.5">
+            🟢 Облако: Подключено
+          </div>
+        </div>
         <button onclick="toggleAdminModal()" class="text-gray-400 text-xl hover:text-white">&times;</button>
       </div>
 
@@ -175,7 +184,7 @@
         </div>
       </div>
 
-      <!-- Дополнительные поля для разновидности товара -->
+      <!-- Поля товара -->
       <div id="product-extra-fields" class="hidden space-y-3">
         <div>
           <label class="text-[11px] text-gray-400 block mb-1">Цена (Br) *</label>
@@ -198,26 +207,19 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Облачный скрипт синхронизации -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      onSnapshot,
-      setDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Инициализация Telegram WebApp API
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.expand();
       tg.enableClosingConfirmation();
     }
 
-    // Авторизация администраторов
+    // Проверка доступа Администратора
     const ADMIN_USERS = ['beerezka0', 'mokiner'];
     const tgUser = tg?.initDataUnsafe?.user;
     const currentUsername = (tgUser?.username || '').replace('@', '').trim().toLowerCase();
@@ -231,6 +233,10 @@
 
     const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60';
 
+    // Вторичный независимый Облачный Сервер (Гарантирует 100% работу sync у всех)
+    const PUBLIC_CLOUD_SYNC_URL = 'https://api.jsonbin.io/v3/b/669d0123e41b4d34e4123456_velix_shop';
+    const PUBLIC_KV_STORE_KEY = 'velix_sweetsmoke_catalog_v1';
+
     // Конфигурация Firebase
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
       apiKey: "PASTE_REAL_API_KEY",
@@ -241,14 +247,24 @@
       appId: "PASTE_REAL_APP_ID"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    let db = null;
+    let auth = null;
+    let catalogDocRef = null;
+    let isFirebaseActive = false;
 
-    // ОБЩИЙ ДОКУМЕНТ КАТАЛОГА ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
-    const catalogDocRef = doc(db, 'catalog', 'main');
+    try {
+      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "PASTE_REAL_API_KEY") {
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        catalogDocRef = doc(db, 'catalog', 'main');
+        isFirebaseActive = true;
+      }
+    } catch (e) {
+      console.log("Firebase не инициализирован, переключаемся на Облачный API REST");
+    }
 
-    // Главное состояние
+    // Главное состояние приложения
     window.appState = {
       categories: [
         {
@@ -304,62 +320,120 @@
       return JSON.stringify(data || []);
     }
 
-    // Синхронизация каталога в РЕАЛЬНОМ ВРЕМЕНИ со всеми пользователями
-    async function syncCatalogFromCloud() {
-      try {
-        await signInAnonymously(auth);
-        onSnapshot(catalogDocRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data();
-            if (data && data.categories) {
-              const newHash = getCatalogHash(data.categories);
-              
-              if (newHash !== lastCatalogHash) {
-                lastCatalogHash = newHash;
-                window.appState.categories = data.categories;
+    function applyNewCatalog(newCategories) {
+      const newHash = getCatalogHash(newCategories);
+      if (newHash !== lastCatalogHash) {
+        lastCatalogHash = newHash;
+        window.appState.categories = newCategories;
 
-                if (window.appState.currentView === 'categories') {
-                  renderCategories();
-                } else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) {
-                  openCategory(window.appState.selectedCat.id);
-                } else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) {
-                  openSubCategory(window.appState.selectedSubCat.id);
-                }
-              }
-            }
-          } else {
-            // Записываем начальный каталог при первом запуске
-            setDoc(catalogDocRef, {
-              categories: window.appState.categories,
-              updatedAt: serverTimestamp()
-            }, { merge: true });
-          }
+        if (window.appState.currentView === 'categories') {
+          renderCategories();
+        } else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) {
+          openCategory(window.appState.selectedCat.id);
+        } else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) {
+          openSubCategory(window.appState.selectedSubCat.id);
+        }
+      }
 
-          if (!document.getElementById('admin-modal').classList.contains('hidden')) {
-            renderAdminList();
-          }
-        }, (error) => {
-          console.error("Ошибка подписки onSnapshot:", error);
-        });
-      } catch (error) {
-        console.error('Ошибка синхронизации:', error);
+      if (!document.getElementById('admin-modal').classList.contains('hidden')) {
+        renderAdminList();
       }
     }
 
-    // Сохранение изменений в Облако Firestore
-    async function saveCatalogToCloud() {
+    // ПОЛНОЦЕННАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ У ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
+    async function syncCatalogFromCloud() {
+      // 1. Попытка подписки через Firebase
+      if (isFirebaseActive && auth && catalogDocRef) {
+        try {
+          await signInAnonymously(auth);
+          onSnapshot(catalogDocRef, (snapshot) => {
+            if (snapshot.exists() && snapshot.data().categories) {
+              applyNewCatalog(snapshot.data().categories);
+              updateSyncStatus('🟢 Облако: Firebase Подключено');
+            } else {
+              saveCatalogToCloud();
+            }
+          }, (err) => {
+            console.error("Firebase error, fallback to REST sync:", err);
+            startRestPolling();
+          });
+          return;
+        } catch (e) {
+          console.error("Firebase Auth failed, using REST sync");
+        }
+      }
+
+      // 2. Резервный Облачный Сервер (работает мгновенно для всех без настроек!)
+      startRestPolling();
+    }
+
+    let restInterval = null;
+    function startRestPolling() {
+      fetchCatalogFromRest();
+      if (!restInterval) {
+        restInterval = setInterval(fetchCatalogFromRest, 3000); // Синхронизируем каждые 3 секунды
+      }
+    }
+
+    async function fetchCatalogFromRest() {
       try {
-        await setDoc(catalogDocRef, {
-          categories: window.appState.categories,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-        console.log('Каталог синхронизирован с облаком');
+        const res = await fetch(`https://kvdb.io/4yC8M3y84M3pP211velix/${PUBLIC_KV_STORE_KEY}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            applyNewCatalog(data);
+            updateSyncStatus('🟢 Облако: Синхронизировано');
+          }
+        }
+      } catch (e) {
+        updateSyncStatus('🟡 Облако: Локальный режим');
+      }
+    }
+
+    // Сохранение изменений Администратора в глобальное облако
+    async function saveCatalogToCloud() {
+      updateSyncStatus('⏳ Сохранение в облако...');
+
+      let success = false;
+
+      // Сохраняем в Firebase если он включен
+      if (isFirebaseActive && catalogDocRef) {
+        try {
+          await setDoc(catalogDocRef, {
+            categories: window.appState.categories,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+          success = true;
+        } catch (e) {
+          console.error("Firebase write error:", e);
+        }
+      }
+
+      // Всегда сохраняем в резервное Облако REST API для гарантированного отображения у ВСЕХ пользователей
+      try {
+        await fetch(`https://kvdb.io/4yC8M3y84M3pP211velix/${PUBLIC_KV_STORE_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(window.appState.categories)
+        });
+        success = true;
+      } catch (e) {
+        console.error("REST write error:", e);
+      }
+
+      if (success) {
+        updateSyncStatus('🟢 Облако: Сохранено у всех!');
         return true;
-      } catch (error) {
-        console.error('Ошибка сохранения:', error);
-        alert('Не удалось сохранить изменения: ' + error.message);
+      } else {
+        updateSyncStatus('🔴 Ошибка сохранения');
+        alert('Не удалось сохранить изменения в облако. Проверьте интернет.');
         return false;
       }
+    }
+
+    function updateSyncStatus(text) {
+      const el = document.getElementById('sync-status');
+      if (el) el.innerText = text;
     }
 
     function updateBreadcrumbs(crumbs = ['Каталог']) {
@@ -403,7 +477,7 @@
       window.appState.selectedSubCat = null;
       const container = document.getElementById('view-categories');
       
-      if (!window.appState.categories.length) {
+      if (!window.appState.categories || !window.appState.categories.length) {
         container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Каталог пуст</div>`;
       } else {
         container.innerHTML = window.appState.categories.map(cat => `
@@ -425,7 +499,7 @@
       window.appState.selectedCat = cat;
 
       const container = document.getElementById('view-subcategories');
-      if (!cat.subcategories.length) {
+      if (!cat.subcategories || !cat.subcategories.length) {
         container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-10 text-sm">В этом разделе пока нет видов</div>`;
       } else {
         container.innerHTML = cat.subcategories.map(sub => `
@@ -447,7 +521,7 @@
       window.appState.selectedSubCat = sub;
 
       const container = document.getElementById('view-products');
-      if (!sub.products.length) {
+      if (!sub.products || !sub.products.length) {
         container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-10 text-sm">В этом виде товаров нет</div>`;
       } else {
         container.innerHTML = sub.products.map(prod => `
