@@ -193,16 +193,22 @@
 
       <div class="flex gap-2 pt-2">
         <button type="button" onclick="closeFormModal()" class="flex-1 bg-gray-800 text-gray-300 text-xs py-2.5 rounded-xl font-medium">Отмена</button>
-        <button type="button" onclick="saveFormElement()" class="flex-1 bg-blue-600 text-white text-xs py-2.5 rounded-xl font-bold">Сохранить</button>
+        <button type="button" id="save-form-btn" onclick="saveFormElement()" class="flex-1 bg-blue-600 text-white text-xs py-2.5 rounded-xl font-bold">Сохранить</button>
       </div>
     </div>
   </div>
 
-  <!-- Firebase SDK для работы с единым облаком Firestore -->
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import {
+      getFirestore,
+      doc,
+      onSnapshot,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Инициализация Telegram WebApp API
     const tg = window.Telegram?.WebApp;
@@ -211,7 +217,7 @@
       tg.enableClosingConfirmation();
     }
 
-    // Авторизация по список админов
+    // Авторизация администраторов
     const ADMIN_USERS = ['beerezka0', 'mokiner'];
     const tgUser = tg?.initDataUnsafe?.user;
     const currentUsername = (tgUser?.username || '').replace('@', '').trim().toLowerCase();
@@ -225,21 +231,21 @@
 
     const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60';
 
-    // Firebase Конфигурация
+    // Конфигурация Firebase
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-      apiKey: "demo",
-      authDomain: "demo.firebaseapp.com",
-      projectId: "demo-project",
-      storageBucket: "demo.appspot.com",
-      messagingSenderId: "123456",
-      appId: "1:123456:web:123456"
+      apiKey: "PASTE_REAL_API_KEY",
+      authDomain: "PASTE_REAL_AUTH_DOMAIN",
+      projectId: "PASTE_REAL_PROJECT_ID",
+      storageBucket: "PASTE_REAL_STORAGE_BUCKET",
+      messagingSenderId: "PASTE_REAL_SENDER_ID",
+      appId: "PASTE_REAL_APP_ID"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ОБЩИЙ ДОКУМЕНТ КАТАЛОГА ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
+    // ОБЩИЙ ДОКУМЕНТ КАТАЛОГАДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
     const catalogDocRef = doc(db, 'catalog', 'main');
 
     // Главное состояние
@@ -277,53 +283,70 @@
     let adminLevel = 'categories';
     let selectedAdminCatId = null;
     let selectedAdminSubCatId = null;
+    let lastCatalogHash = '';
 
-    // Синхронизация каталога в реальном времени у ВСЕХ пользователей
+    // Вычисление хеша для предотвращения лишней перерисовки DOM
+    function getCatalogHash(data) {
+      return JSON.stringify(data || []);
+    }
+
+    // Синхронизация каталога
     async function syncCatalogFromCloud() {
       try {
         await signInAnonymously(auth);
         onSnapshot(catalogDocRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.data();
-            if (data.categories) {
-              window.appState.categories = data.categories;
+            if (data && data.categories) {
+              const newHash = getCatalogHash(data.categories);
+              
+              // Если данные изменились - обновляем состояние и основной экран
+              if (newHash !== lastCatalogHash) {
+                lastCatalogHash = newHash;
+                window.appState.categories = data.categories;
+
+                if (window.appState.currentView === 'categories') {
+                  renderCategories();
+                } else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) {
+                  openCategory(window.appState.selectedCat.id);
+                } else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) {
+                  openSubCategory(window.appState.selectedSubCat.id);
+                }
+              }
             }
           } else {
             // Создаем документ при первом запуске
             setDoc(catalogDocRef, {
               categories: window.appState.categories,
-              updatedAt: Date.now()
-            });
+              updatedAt: serverTimestamp()
+            }, { merge: true });
           }
-          // Перерисовываем интерфейс у всех пользователей
-          if (window.appState.currentView === 'categories') {
-            renderCategories();
-          } else if (window.appState.currentView === 'subcategories' && window.appState.selectedCat) {
-            openCategory(window.appState.selectedCat.id);
-          } else if (window.appState.currentView === 'products' && window.appState.selectedSubCat) {
-            openSubCategory(window.appState.selectedSubCat.id);
-          }
-          // Обновляем админку, если она открыта
+
+          // Обновляем список админки без раннего return, если админка открыта
           if (!document.getElementById('admin-modal').classList.contains('hidden')) {
             renderAdminList();
           }
+        }, (error) => {
+          console.error("Ошибка подписки onSnapshot:", error);
         });
       } catch (error) {
         console.error('Ошибка синхронизации:', error);
       }
     }
 
-    // Сохранение изменений администратора в облако
+    // Сохранение каталога
     async function saveCatalogToCloud() {
       try {
         await setDoc(catalogDocRef, {
           categories: window.appState.categories,
-          updatedAt: Date.now()
-        });
+          updatedAt: serverTimestamp()
+        }, { merge: true });
         console.log('Каталог сохранён в облако');
+        return true;
       } catch (error) {
         console.error('Ошибка сохранения:', error);
-        alert('Не удалось сохранить изменения');
+        alert('Не удалось сохранить изменения: ' + error.message);
+        return false;
       }
     }
 
@@ -390,7 +413,7 @@
         container.innerHTML = window.appState.categories.map(cat => `
           <div onclick="openCategory('${cat.id}')" class="tg-card p-3 rounded-2xl flex flex-col items-center text-center cursor-pointer hover:opacity-90 transition">
             <div class="w-full h-32 rounded-xl mb-2 overflow-hidden bg-gray-800 flex items-center justify-center">
-              <img src="${cat.image}" class="w-full h-full object-cover" alt="${cat.title}" onerror="this.src='${FALLBACK_IMAGE}'">
+              <img src="${cat.image}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="${cat.title}" onerror="this.src='${FALLBACK_IMAGE}'">
             </div>
             <span class="text-xs font-semibold text-gray-200 mt-1 line-clamp-1">${cat.title}</span>
           </div>
@@ -414,7 +437,7 @@
         container.innerHTML = cat.subcategories.map(sub => `
           <div onclick="openSubCategory('${sub.id}')" class="tg-card p-3 rounded-2xl flex flex-col items-center text-center cursor-pointer hover:opacity-90 transition">
             <div class="w-full h-32 rounded-xl mb-2 overflow-hidden bg-gray-800 flex items-center justify-center">
-              <img src="${sub.image}" class="w-full h-full object-cover" alt="${sub.title}" onerror="this.src='${FALLBACK_IMAGE}'">
+              <img src="${sub.image}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="${sub.title}" onerror="this.src='${FALLBACK_IMAGE}'">
             </div>
             <span class="text-xs font-semibold text-gray-200 mt-1 line-clamp-1">${sub.title}</span>
           </div>
@@ -439,7 +462,7 @@
           <div onclick="openProductDetail('${prod.id}')" class="tg-card p-3 rounded-2xl flex flex-col justify-between cursor-pointer">
             <div>
               <div class="w-full h-32 rounded-xl overflow-hidden bg-gray-800 mb-2">
-                <img src="${prod.image}" class="w-full h-full object-cover" alt="${prod.title}" onerror="this.src='${FALLBACK_IMAGE}'">
+                <img src="${prod.image}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="${prod.title}" onerror="this.src='${FALLBACK_IMAGE}'">
               </div>
               <h3 class="text-xs font-semibold text-white leading-tight line-clamp-2">${prod.title}</h3>
             </div>
@@ -467,7 +490,7 @@
       container.innerHTML = `
         <div class="space-y-4">
           <div class="w-full h-64 bg-gray-800 rounded-2xl overflow-hidden">
-            <img src="${prod.image}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
+            <img src="${prod.image}" loading="lazy" decoding="async" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
           </div>
 
           <div>
@@ -529,7 +552,7 @@
           ${window.appState.cart.map((item, idx) => `
             <div class="tg-card p-3 rounded-xl flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <img src="${item.image}" class="w-12 h-12 object-cover rounded-lg bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
+                <img src="${item.image}" loading="lazy" decoding="async" class="w-12 h-12 object-cover rounded-lg bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
                 <div>
                   <h4 class="text-xs font-bold text-blue-400 line-clamp-1">${item.title}</h4>
                   <p class="text-[11px] text-gray-400">${item.price} Br</p>
@@ -632,7 +655,7 @@
         container.innerHTML = results.map(prod => `
           <div onclick="openProductDetail('${prod.id}')" class="tg-card p-3 rounded-2xl flex flex-col justify-between cursor-pointer">
             <div class="w-full h-28 rounded-xl overflow-hidden bg-gray-800 mb-2">
-              <img src="${prod.image}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
+              <img src="${prod.image}" loading="lazy" decoding="async" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
             </div>
             <h3 class="text-xs font-semibold text-white leading-tight line-clamp-2">${prod.title}</h3>
             <span class="text-xs font-bold text-blue-400 mt-2">${prod.price} Br</span>
@@ -674,7 +697,7 @@
         container.innerHTML = window.appState.categories.map(cat => `
           <div class="bg-[#242526] p-3 rounded-xl flex items-center justify-between">
             <div onclick="enterAdminSubCategories('${cat.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
-              <img src="${cat.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
+              <img src="${cat.image}" loading="lazy" decoding="async" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div>
                 <h4 class="text-xs font-bold text-white">${cat.title}</h4>
                 <p class="text-[10px] text-gray-400">${(cat.subcategories || []).length} видов &gt;</p>
@@ -699,7 +722,7 @@
         container.innerHTML = subs.map(sub => `
           <div class="bg-[#242526] p-3 rounded-xl flex items-center justify-between">
             <div onclick="enterAdminProducts('${sub.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
-              <img src="${sub.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
+              <img src="${sub.image}" loading="lazy" decoding="async" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div>
                 <h4 class="text-xs font-bold text-white">${sub.title}</h4>
                 <p class="text-[10px] text-gray-400">${(sub.products || []).length} товаров &gt;</p>
@@ -725,7 +748,7 @@
         container.innerHTML = prods.map(prod => `
           <div class="bg-[#242526] p-3 rounded-xl flex items-center justify-between">
             <div class="flex items-center gap-3 flex-1">
-              <img src="${prod.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
+              <img src="${prod.image}" loading="lazy" decoding="async" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div>
                 <h4 class="text-xs font-bold text-white">${prod.title}</h4>
                 <p class="text-[10px] text-blue-400 font-bold">${prod.price} Br</p>
@@ -756,33 +779,33 @@
       renderAdminList();
     };
 
-    window.deleteCategory = function(catId) {
+    window.deleteCategory = async function(catId) {
       if (confirm('Удалить эту категорию?')) {
         window.appState.categories = window.appState.categories.filter(c => c.id !== catId);
-        saveCatalogToCloud();
-        renderAdminList();
+        const ok = await saveCatalogToCloud();
+        if (ok) renderAdminList();
       }
     };
 
-    window.deleteSubCategory = function(subId) {
+    window.deleteSubCategory = async function(subId) {
       if (confirm('Удалить этот вид категории?')) {
         const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
         if (cat) {
           cat.subcategories = cat.subcategories.filter(s => s.id !== subId);
-          saveCatalogToCloud();
-          renderAdminList();
+          const ok = await saveCatalogToCloud();
+          if (ok) renderAdminList();
         }
       }
     };
 
-    window.deleteProduct = function(prodId) {
+    window.deleteProduct = async function(prodId) {
       if (confirm('Удалить эту разновидность товара?')) {
         const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
         const sub = cat?.subcategories?.find(s => s.id === selectedAdminSubCatId);
         if (sub) {
           sub.products = sub.products.filter(p => p.id !== prodId);
-          saveCatalogToCloud();
-          renderAdminList();
+          const ok = await saveCatalogToCloud();
+          if (ok) renderAdminList();
         }
       }
     };
@@ -818,14 +841,19 @@
       document.getElementById('form-image-input').value = url;
     };
 
-    window.saveFormElement = function() {
+    // Асинхронное сохранение элементов формы
+    window.saveFormElement = async function() {
       const title = document.getElementById('form-title-input').value.trim();
       const image = document.getElementById('form-image-input').value.trim() || FALLBACK_IMAGE;
+      const saveBtn = document.getElementById('save-form-btn');
 
       if (!title) {
         alert('Введите название!');
         return;
       }
+
+      saveBtn.disabled = true;
+      saveBtn.innerText = 'Сохранение...';
 
       if (adminLevel === 'categories') {
         window.appState.categories.push({
@@ -866,12 +894,17 @@
         }
       }
 
-      saveCatalogToCloud();
-      closeFormModal();
-      renderAdminList();
+      const ok = await saveCatalogToCloud();
+      saveBtn.disabled = false;
+      saveBtn.innerText = 'Сохранить';
+
+      if (ok) {
+        closeFormModal();
+        renderAdminList();
+      }
     };
 
-    // Запуск приложения
+    // Единственная инициализация приложения при старте
     window.onload = function () {
       syncCatalogFromCloud();
     };
