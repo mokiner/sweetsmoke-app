@@ -10,88 +10,69 @@
         :root {
             --green: #00ff41;
             --dark: #0a0a0a;
+            --accent: #00ff41;
         }
-        * { box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            margin: 0;
-            padding: 0;
             background: #000;
             color: #fff;
             font-family: 'Press Start 2P', system-ui;
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://i.imgur.com/YOUR_BG1.jpg'); /* ← Замени на свои ссылки */
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://i.imgur.com/monsterbg1.jpg');
             background-size: cover;
             background-attachment: fixed;
             min-height: 100vh;
+            overflow-x: hidden;
         }
         .header {
             background: rgba(10,10,10,0.95);
-            padding: 12px;
+            padding: 15px;
             text-align: center;
             border-bottom: 4px solid var(--green);
             position: sticky;
             top: 0;
             z-index: 100;
         }
-        .logo {
-            font-size: 22px;
-            text-shadow: 0 0 15px var(--green);
-            letter-spacing: 2px;
-        }
+        .logo { font-size: 24px; text-shadow: 0 0 15px var(--green); }
         .nav {
             display: flex;
-            justify-content: center;
-            gap: 8px;
+            background: #111;
             padding: 10px;
-            background: rgba(0,0,0,0.9);
-            flex-wrap: wrap;
+            overflow-x: auto;
+            white-space: nowrap;
         }
         .nav-btn {
-            background: #111;
+            background: #000;
             color: var(--green);
             border: 2px solid var(--green);
-            padding: 10px 16px;
+            padding: 8px 16px;
+            margin: 0 5px;
             cursor: pointer;
             font-size: 12px;
-            transition: all 0.3s;
         }
-        .nav-btn.active, .nav-btn:hover {
-            background: var(--green);
-            color: #000;
-            box-shadow: 0 0 20px var(--green);
-        }
-        .catalog {
+        .nav-btn.active { background: var(--green); color: #000; }
+        .screen { display: none; padding: 15px; }
+        .screen.active { display: block; }
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 15px;
-            padding: 15px;
         }
-        .product {
+        .card {
             background: rgba(20,20,20,0.95);
             border: 3px solid #222;
-            padding: 10px;
-            text-align: center;
+            border-radius: 4px;
+            overflow: hidden;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .product:hover {
-            transform: scale(1.08);
-            border-color: var(--green);
-            box-shadow: 0 0 20px rgba(0,255,65,0.4);
-        }
-        .product img {
-            width: 100%;
-            height: 130px;
-            object-fit: cover;
-            border: 2px solid #333;
-        }
-        .product h3 { margin: 8px 0 4px; font-size: 13px; }
+        .card:hover { border-color: var(--green); transform: scale(1.05); }
+        .card img { width: 100%; height: 140px; object-fit: cover; }
+        .card-info { padding: 10px; text-align: center; }
         .price { color: var(--green); font-weight: bold; }
-        .stock { font-size: 10px; color: #aaa; margin-top: 4px; }
-        
         .modal {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.97);
+            background: rgba(0,0,0,0.98);
             display: none;
             align-items: center;
             justify-content: center;
@@ -101,160 +82,178 @@
             background: #111;
             border: 4px solid var(--green);
             padding: 20px;
-            max-width: 92%;
+            width: 92%;
             max-height: 90vh;
             overflow-y: auto;
-        }
-        .cart-float {
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            background: var(--green);
-            color: #000;
-            padding: 12px 20px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 25px var(--green);
-            z-index: 900;
         }
         button {
             background: #000;
             color: var(--green);
             border: 2px solid var(--green);
             padding: 12px;
-            cursor: pointer;
-            font-family: inherit;
             width: 100%;
             margin: 8px 0;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            background: #222;
-            border: 2px solid var(--green);
-            color: white;
-            margin: 6px 0;
+            cursor: pointer;
             font-family: inherit;
         }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #111;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 3px solid var(--green);
+            z-index: 200;
+        }
+        .admin-panel { background: #1a0000; padding: 15px; }
     </style>
 </head>
 <body>
+
+    <!-- HEADER -->
     <div class="header">
         <div class="logo">SWEETSMOKE BORISOV</div>
-        <div style="font-size:11px;color:#0f0;margin-top:4px;">UNLEASH THE BEAST</div>
+        <div style="font-size:11px;color:#0f0;">UNLEASH THE BEAST</div>
     </div>
 
+    <!-- NAV -->
     <div class="nav">
-        <button class="nav-btn active" onclick="showSection('catalog')">КАТАЛОГ</button>
-        <button class="nav-btn" onclick="showSection('cart')">КОРЗИНА <span id="cart-count">0</span></button>
+        <button class="nav-btn active" onclick="switchScreen('catalog')">КАТАЛОГ</button>
+        <button class="nav-btn" onclick="switchScreen('search')">ПОИСК</button>
+        <button class="nav-btn" onclick="switchScreen('cart')">КОРЗИНА</button>
+        <button class="nav-btn" id="admin-nav-btn" style="display:none;" onclick="switchScreen('admin')">УПРАВЛЕНИЕ</button>
     </div>
 
-    <!-- Каталог -->
-    <div id="catalog-section" class="section">
-        <div class="catalog" id="products-grid"></div>
+    <!-- SCREENS -->
+    <div id="catalog" class="screen active">
+        <h2>Каталог</h2>
+        <div class="grid" id="catalog-grid"></div>
     </div>
 
-    <!-- Корзина -->
-    <div id="cart-section" class="section" style="display:none; padding:15px;">
-        <h2 style="color:var(--green);">КОРЗИНА</h2>
+    <div id="search" class="screen">
+        <input type="text" id="search-input" placeholder="Поиск товара..." style="width:100%;padding:12px;background:#222;border:2px solid #0f0;color:white;" onkeyup="searchProducts()">
+        <div class="grid" id="search-grid"></div>
+    </div>
+
+    <div id="cart" class="screen">
+        <h2>Корзина</h2>
         <div id="cart-items"></div>
-        <div id="cart-total" style="font-size:18px; margin:20px 0; color:var(--green); text-align:center;"></div>
+        <div id="cart-total" style="font-size:20px;color:var(--green);margin:20px 0;"></div>
         <button onclick="checkout()">ОФОРМИТЬ ЗАКАЗ</button>
     </div>
 
-    <!-- Модальное окно товара -->
+    <div id="admin" class="screen admin-panel">
+        <h2>УПРАВЛЕНИЕ КАТАЛОГОМ</h2>
+        <button onclick="addCategory()">+ Новая категория</button>
+        <div id="admin-categories"></div>
+    </div>
+
+    <!-- MODALS -->
     <div id="product-modal" class="modal">
         <div class="modal-content">
-            <span onclick="closeModal()" style="float:right;font-size:28px;cursor:pointer;color:var(--green);">&times;</span>
-            <img id="modal-image" style="width:100%;height:220px;object-fit:cover;">
-            <h2 id="modal-title" style="margin:10px 0 5px;"></h2>
+            <span onclick="closeModal()" style="float:right;font-size:30px;cursor:pointer;">×</span>
+            <img id="modal-img" style="width:100%;height:250px;object-fit:cover;">
+            <h2 id="modal-name"></h2>
             <p id="modal-desc"></p>
-            <div id="modal-variants" style="margin:15px 0;"></div>
-            <div id="modal-price" class="price" style="font-size:18px;"></div>
-            <div id="modal-stock" class="stock"></div>
-            <button onclick="addCurrentToCart()">ДОБАВИТЬ В КОРЗИНУ</button>
+            <div id="modal-price" class="price"></div>
+            <button onclick="addToCartCurrent()">В КОРЗИНУ</button>
         </div>
     </div>
 
-    <!-- Оформление заказа -->
     <div id="checkout-modal" class="modal">
         <div class="modal-content">
-            <h2>ОФОРМЛЕНИЕ ЗАКАЗА</h2>
-            <input type="text" id="name" placeholder="Имя" required>
-            <input type="tel" id="phone" placeholder="Телефон" required>
-            <input type="text" id="address" placeholder="Адрес доставки">
-            <textarea id="comment" placeholder="Комментарий к заказу" rows="3"></textarea>
-            <button onclick="submitOrder()">ОТПРАВИТЬ ЗАКАЗ В TELEGRAM</button>
-            <button onclick="closeCheckout()" style="background:#333;">ОТМЕНА</button>
+            <h2>Оформление заказа</h2>
+            <input id="order-name" placeholder="Имя" style="width:100%;padding:10px;margin:5px 0;">
+            <input id="order-phone" placeholder="Телефон" style="width:100%;padding:10px;margin:5px 0;">
+            <textarea id="order-comment" placeholder="Комментарий" style="width:100%;height:80px;padding:10px;margin:5px 0;"></textarea>
+            <button onclick="submitOrder()">ОТПРАВИТЬ ЗАКАЗ</button>
+            <button onclick="closeCheckoutModal()" style="background:#400;">Отмена</button>
         </div>
     </div>
 
-    <div class="cart-float" onclick="showSection('cart')">
-        🛒 <span id="cart-count-bottom">0</span>
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <button onclick="switchScreen('catalog')">🏠</button>
+        <button onclick="switchScreen('search')">🔍</button>
+        <button onclick="switchScreen('cart')">🛒 <span id="bottom-cart-count">0</span></button>
     </div>
 
     <script>
+        // ==================== ДАННЫЕ ====================
+        let catalogData = {
+            categories: [
+                {id:1, name:"Жевательные смеси", image:"https://picsum.photos/id/20/300/200"},
+                {id:2, name:"POD-системы", image:"https://picsum.photos/id/21/300/200"}
+            ],
+            products: [
+                {id:101, catId:1, name:"Glitch 150mg", price:13, stock:45, image:"https://picsum.photos/id/22/300/200", desc:"Полярная мята"},
+                {id:102, catId:1, name:"ZUZA 75mg", price:13, stock:30, image:"https://picsum.photos/id/23/300/200", desc:"Клубника"}
+            ]
+        };
+
         let cart = [];
         let currentProduct = null;
 
-        const products = [
-            {
-                id: 1,
-                name: "Glitch (150 mg)",
-                price: 13,
-                stock: 45,
-                image: "https://i.imgur.com/YOUR_PRODUCT1.jpg", // Замени
-                variants: ["Полярная Мята", "Двойная мята", "Эвкалипт Мята"],
-                desc: "Мощная жевательная смесь 150mg",
-                category: "Жевательные смеси"
-            },
-            {
-                id: 2,
-                name: "Glitch (75 mg)",
-                price: 13,
-                stock: 28,
-                image: "https://i.imgur.com/YOUR_PRODUCT2.jpg",
-                variants: ["Полярная Мята"],
-                desc: "Облегчённая версия",
-                category: "Жевательные смеси"
-            },
-            // Добавляй сюда новые товары
-        ];
+        // ==================== ADMIN CHECK ====================
+        const admins = ["beerezka0", "mokiner"];
+        const user = Telegram.WebApp.initDataUnsafe?.user;
+        if (user && admins.includes(user.username)) {
+            document.getElementById("admin-nav-btn").style.display = "inline-block";
+        }
 
-        function renderProducts() {
-            const grid = document.getElementById('products-grid');
+        // ==================== ФУНКЦИИ ====================
+        function switchScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screen).classList.add('active');
+            if (screen === 'catalog') renderCatalog();
+            if (screen === 'cart') renderCart();
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('catalog-grid');
             grid.innerHTML = '';
-            products.forEach(p => {
+            catalogData.categories.forEach(cat => {
                 const div = document.createElement('div');
-                div.className = 'product';
+                div.className = 'card';
                 div.innerHTML = `
-                    <img src="${p.image}" alt="${p.name}">
-                    <h3>${p.name}</h3>
-                    <div class="price">${p.price} Br</div>
-                    <div class="stock">В наличии: ${p.stock}</div>
+                    <img src="${cat.image}">
+                    <div class="card-info">
+                        <h3>${cat.name}</h3>
+                    </div>
                 `;
-                div.onclick = () => showProduct(p);
+                div.onclick = () => showCategoryProducts(cat.id);
                 grid.appendChild(div);
             });
         }
 
-        function showProduct(product) {
-            currentProduct = product;
-            document.getElementById('modal-image').src = product.image;
-            document.getElementById('modal-title').textContent = product.name;
-            document.getElementById('modal-desc').textContent = product.desc;
-            document.getElementById('modal-price').textContent = `${product.price} Br`;
-            document.getElementById('modal-stock').textContent = `Остаток: ${product.stock} шт.`;
-
-            const vDiv = document.getElementById('modal-variants');
-            vDiv.innerHTML = '<strong>Варианты вкуса:</strong><br>';
-            product.variants.forEach(v => {
-                const btn = document.createElement('button');
-                btn.textContent = v;
-                btn.style.margin = '4px';
-                vDiv.appendChild(btn);
+        function showCategoryProducts(catId) {
+            const filtered = catalogData.products.filter(p => p.catId === catId);
+            const grid = document.getElementById('catalog-grid');
+            grid.innerHTML = '<button onclick="renderCatalog()">← Назад</button>';
+            filtered.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <img src="${p.image}">
+                    <div class="card-info">
+                        <h3>${p.name}</h3>
+                        <div class="price">${p.price} Br</div>
+                    </div>
+                `;
+                div.onclick = () => showProductModal(p);
+                grid.appendChild(div);
             });
+        }
 
+        function showProductModal(product) {
+            currentProduct = product;
+            document.getElementById('modal-img').src = product.image;
+            document.getElementById('modal-name').textContent = product.name;
+            document.getElementById('modal-desc').textContent = product.desc || '';
+            document.getElementById('modal-price').textContent = `${product.price} Br`;
             document.getElementById('product-modal').style.display = 'flex';
         }
 
@@ -262,54 +261,41 @@
             document.getElementById('product-modal').style.display = 'none';
         }
 
-        function addCurrentToCart() {
-            if (!currentProduct || currentProduct.stock <= 0) {
-                alert("Товара нет в наличии!");
-                return;
-            }
-            cart.push({...currentProduct, quantity: 1});
-            updateCart();
+        function addToCartCurrent() {
+            if (!currentProduct) return;
+            cart.push({...currentProduct});
+            updateCartCount();
             closeModal();
-            alert("✅ Добавлено в корзину!");
+            alert("Добавлено в корзину!");
         }
 
-        function updateCart() {
+        function updateCartCount() {
             const count = cart.length;
-            document.getElementById('cart-count').textContent = count;
-            document.getElementById('cart-count-bottom').textContent = count;
-        }
-
-        function showSection(section) {
-            document.getElementById('catalog-section').style.display = section === 'catalog' ? 'block' : 'none';
-            document.getElementById('cart-section').style.display = section === 'cart' ? 'block' : 'none';
-            
-            if (section === 'cart') renderCart();
+            document.getElementById('bottom-cart-count').textContent = count;
         }
 
         function renderCart() {
             const container = document.getElementById('cart-items');
             container.innerHTML = '';
             let total = 0;
-
-            cart.forEach((item, i) => {
+            cart.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.style = 'margin:12px 0; padding:10px; background:#1a1a1a; border:1px solid #333;';
                 div.innerHTML = `
-                    <strong>${item.name}</strong><br>
-                    ${item.price} Br × ${item.quantity} = <span style="color:var(--green)">${item.price * item.quantity} Br</span>
-                    <button onclick="removeFromCart(${i})" style="float:right;background:#900;color:white;border:none;padding:4px 8px;">✕</button>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0;">
+                        <div>${item.name} — ${item.price} Br</div>
+                        <button onclick="removeFromCart(${index})" style="background:#900;width:auto;padding:5px 10px;">×</button>
+                    </div>
                 `;
                 container.appendChild(div);
-                total += item.price * item.quantity;
+                total += item.price;
             });
-
-            document.getElementById('cart-total').textContent = `ИТОГО: ${total} Br`;
+            document.getElementById('cart-total').textContent = `Итого: ${total} Br`;
         }
 
         function removeFromCart(index) {
             cart.splice(index, 1);
             renderCart();
-            updateCart();
+            updateCartCount();
         }
 
         function checkout() {
@@ -317,45 +303,57 @@
             document.getElementById('checkout-modal').style.display = 'flex';
         }
 
-        function closeCheckout() {
+        function closeCheckoutModal() {
             document.getElementById('checkout-modal').style.display = 'none';
         }
 
-        function submitOrder() {
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            if (!name || !phone) return alert("Заполните имя и телефон!");
+        async function submitOrder() {
+            const name = document.getElementById('order-name').value;
+            const phone = document.getElementById('order-phone').value;
+            if (!name || !phone) return alert("Заполните данные!");
 
-            const orderData = {
-                user: window.Telegram?.WebApp?.initDataUnsafe?.user || {username: "unknown"},
+            const order = {
+                user: user,
                 items: cart,
-                total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
+                total: cart.reduce((sum, i) => sum + i.price, 0),
                 name, phone,
-                address: document.getElementById('address').value,
-                comment: document.getElementById('comment').value,
-                time: new Date().toLocaleString('ru-RU')
+                comment: document.getElementById('order-comment').value
             };
 
-            if (window.Telegram && window.Telegram.WebApp) {
-                Telegram.WebApp.sendData(JSON.stringify(orderData));
-                Telegram.WebApp.close();
-            } else {
-                console.log("ЗАКАЗ:", orderData);
-                alert("Заказ отправлен (тестовый режим)");
-            }
-
+            Telegram.WebApp.sendData(JSON.stringify(order));
+            alert("Заказ отправлен!");
             cart = [];
-            updateCart();
-            closeCheckout();
-            showSection('catalog');
+            updateCartCount();
+            closeCheckoutModal();
+            switchScreen('catalog');
         }
 
-        // Инициализация
+        function searchProducts() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = catalogData.products.filter(p => 
+                p.name.toLowerCase().includes(query)
+            );
+            // render filtered...
+        }
+
+        function addCategory() {
+            const name = prompt("Название новой категории:");
+            if (name) {
+                catalogData.categories.push({
+                    id: Date.now(),
+                    name: name,
+                    image: "https://picsum.photos/id/" + Math.floor(Math.random()*100) + "/300/200"
+                });
+                renderCatalog();
+            }
+        }
+
+        // INIT
         window.onload = () => {
             Telegram.WebApp.ready();
             Telegram.WebApp.expand();
-            renderProducts();
-            updateCart();
+            renderCatalog();
+            updateCartCount();
         };
     </script>
 </body>
