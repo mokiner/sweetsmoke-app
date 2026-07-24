@@ -1,360 +1,362 @@
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>VELIX / SweetSmoke</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      background-color: #0a0a0c;
-      color: #f2f2f7;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .bg-vibe-1 {
-      background: radial-gradient(circle at 20% 20%, rgba(57, 255, 20, 0.12) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 80%, rgba(0, 122, 255, 0.1) 0%, transparent 50%),
-                  linear-gradient(180deg, #0a0a0c 0%, #121318 100%);
-    }
-    .bg-vibe-2 {
-      background: radial-gradient(circle at 80% 20%, rgba(0, 122, 255, 0.12) 0%, transparent 50%),
-                  radial-gradient(circle at 20% 80%, rgba(57, 255, 20, 0.1) 0%, transparent 50%),
-                  linear-gradient(180deg, #121318 0%, #0a0a0c 100%);
-    }
-    .custom-scroll::-webkit-scrollbar { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SweetSmoke Borisov</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        :root {
+            --green: #00ff41;
+            --dark: #0a0a0a;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: 'Press Start 2P', system-ui;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://i.imgur.com/YOUR_BG1.jpg'); /* ← Замени на свои ссылки */
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(10,10,10,0.95);
+            padding: 12px;
+            text-align: center;
+            border-bottom: 4px solid var(--green);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 22px;
+            text-shadow: 0 0 15px var(--green);
+            letter-spacing: 2px;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(0,0,0,0.9);
+            flex-wrap: wrap;
+        }
+        .nav-btn {
+            background: #111;
+            color: var(--green);
+            border: 2px solid var(--green);
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .nav-btn.active, .nav-btn:hover {
+            background: var(--green);
+            color: #000;
+            box-shadow: 0 0 20px var(--green);
+        }
+        .catalog {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 15px;
+        }
+        .product {
+            background: rgba(20,20,20,0.95);
+            border: 3px solid #222;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .product:hover {
+            transform: scale(1.08);
+            border-color: var(--green);
+            box-shadow: 0 0 20px rgba(0,255,65,0.4);
+        }
+        .product img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            border: 2px solid #333;
+        }
+        .product h3 { margin: 8px 0 4px; font-size: 13px; }
+        .price { color: var(--green); font-weight: bold; }
+        .stock { font-size: 10px; color: #aaa; margin-top: 4px; }
+        
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.97);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #111;
+            border: 4px solid var(--green);
+            padding: 20px;
+            max-width: 92%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .cart-float {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: var(--green);
+            color: #000;
+            padding: 12px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 25px var(--green);
+            z-index: 900;
+        }
+        button {
+            background: #000;
+            color: var(--green);
+            border: 2px solid var(--green);
+            padding: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            width: 100%;
+            margin: 8px 0;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #222;
+            border: 2px solid var(--green);
+            color: white;
+            margin: 6px 0;
+            font-family: inherit;
+        }
+    </style>
 </head>
-<body class="bg-vibe-1 min-h-screen flex flex-col pb-20">
-
-  <!-- ШАПКА -->
-  <header class="sticky top-0 z-40 bg-[#0a0a0c]/90 backdrop-blur-md border-b border-gray-800/80 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <button id="backBtn" class="hidden text-blue-500 font-medium text-sm flex items-center gap-1" onclick="goBack()">
-        ‹ Назад
-      </button>
-      <h1 id="headerTitle" class="text-lg font-black tracking-wider text-white uppercase">VELIX</h1>
+<body>
+    <div class="header">
+        <div class="logo">SWEETSMOKE BORISOV</div>
+        <div style="font-size:11px;color:#0f0;margin-top:4px;">UNLEASH THE BEAST</div>
     </div>
 
-    <!-- КНОПКА УПРАВЛЕНИЯ: ВИДИМА ТОЛЬКО АДМИНАМ -->
-    <button id="adminControlBtn" onclick="openAdminModal()" class="hidden text-xs bg-gray-800/90 text-gray-200 border border-gray-700 px-3 py-1.5 rounded-lg">
-      ⚙ Управление
-    </button>
-  </header>
-
-  <main class="flex-1 px-4 pt-3 max-w-md mx-auto w-full">
-    <!-- КАТАЛОГ -->
-    <section id="tab-catalog" class="tab-content">
-      <div class="relative mb-4">
-        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Найти..." class="w-full bg-[#16171d] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
-        <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      </div>
-
-      <div id="categoryGrid" class="grid grid-cols-2 gap-3 mb-6"></div>
-
-      <div id="catalogTitleArea" class="flex items-center justify-between mb-3 hidden">
-        <h2 id="currentCategoryTitle" class="font-bold text-base text-white">Товары</h2>
-        <span id="productCountBadge" class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">0</span>
-      </div>
-      <div id="productList" class="grid grid-cols-2 gap-3"></div>
-    </section>
-
-    <!-- ДЕТАЛИ ТОВАРА -->
-    <section id="tab-product-detail" class="tab-content hidden">
-      <div class="bg-[#16171d] rounded-2xl border border-gray-800 p-4 mb-4">
-        <div class="relative w-full h-52 rounded-xl overflow-hidden mb-4 bg-gray-900">
-          <img id="detailImg" src="" class="w-full h-full object-cover">
-          <div id="detailStockBadge" class="absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full"></div>
-        </div>
-        <h2 id="detailTitle" class="text-lg font-bold text-white mb-1">...</h2>
-        <div id="detailSubtitle" class="text-xs text-gray-400 mb-4">...</div>
-
-        <div class="mb-5">
-          <label class="block text-xs font-medium text-gray-400 mb-2">Вкус:</label>
-          <div id="flavorOptions" class="flex flex-wrap gap-2"></div>
-        </div>
-      </div>
-
-      <div class="fixed bottom-16 left-0 right-0 p-4 bg-[#0a0a0c]/95 border-t border-gray-800 z-30 max-w-md mx-auto">
-        <button id="addToCartBtn" onclick="addCurrentToCart()" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-between">
-          <span>В корзину</span>
-          <span id="detailPrice">0 Br</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- КОРЗИНА -->
-    <section id="tab-cart" class="tab-content hidden">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-white">Корзина</h2>
-        <button onclick="clearCart()" class="text-xs text-red-400">Очистить</button>
-      </div>
-      <div id="cartItemsList" class="space-y-3 mb-6"></div>
-      <div class="bg-[#16171d] rounded-xl p-4 border border-gray-800 space-y-2 mb-6">
-        <div class="flex justify-between text-sm text-gray-400">
-          <span>Итого</span>
-          <span id="cartTotal" class="text-green-400 font-bold">0 Br</span>
-        </div>
-      </div>
-      <button onclick="showCheckoutForm()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">Оформить заказ</button>
-
-      <div id="checkoutFormBlock" class="hidden mt-6 bg-[#16171d] rounded-2xl p-4 border border-gray-800 space-y-3">
-        <h3 class="font-bold text-white">Доставка</h3>
-        <input type="text" id="orderName" placeholder="Ваше имя" class="w-full bg-[#0a0a0c] border border-gray-800 rounded-xl py-2 px-3 text-sm text-white">
-        <input type="tel" id="orderPhone" placeholder="Телефон" class="w-full bg-[#0a0a0c] border border-gray-800 rounded-xl py-2 px-3 text-sm text-white">
-        <input type="text" id="orderAddress" placeholder="Адрес" class="w-full bg-[#0a0a0c] border border-gray-800 rounded-xl py-2 px-3 text-sm text-white">
-        <button onclick="submitOrder()" class="w-full bg-green-500 text-black font-bold py-3 rounded-xl">Подтвердить заказ</button>
-      </div>
-    </section>
-
-    <!-- ИЗБРАННОЕ -->
-    <section id="tab-favorites" class="tab-content hidden">
-      <h2 class="text-xl font-bold text-white mb-4">Избранное</h2>
-      <div id="favoritesList" class="grid grid-cols-2 gap-3"></div>
-    </section>
-
-    <!-- ПРОФИЛЬ -->
-    <section id="tab-profile" class="tab-content hidden">
-      <div class="bg-[#16171d] rounded-2xl p-4 border border-gray-800 text-center mb-4">
-        <div class="w-12 h-12 bg-gray-800 rounded-full mx-auto mb-2 flex items-center justify-center">👤</div>
-        <h2 id="profileName" class="text-base font-bold text-white">Пользователь</h2>
-        <p id="profileTg" class="text-xs text-gray-500">@username</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- НАВИГАЦИЯ -->
-  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0c]/95 border-t border-gray-800 max-w-md mx-auto">
-    <div class="flex justify-around items-center h-14">
-      <button onclick="switchTab('catalog')" class="flex flex-col items-center text-blue-500 text-xs">📂 Каталог</button>
-      <button onclick="switchTab('cart')" class="flex flex-col items-center text-gray-500 text-xs relative">🛒 Корзина <span id="navCartBadge" class="hidden absolute -top-1 right-1 bg-blue-500 text-white text-[9px] px-1 rounded-full">0</span></button>
-      <button onclick="switchTab('favorites')" class="flex flex-col items-center text-gray-500 text-xs">❤️ Избранное</button>
-      <button onclick="switchTab('profile')" class="flex flex-col items-center text-gray-500 text-xs">👤 Профиль</button>
+    <div class="nav">
+        <button class="nav-btn active" onclick="showSection('catalog')">КАТАЛОГ</button>
+        <button class="nav-btn" onclick="showSection('cart')">КОРЗИНА <span id="cart-count">0</span></button>
     </div>
-  </nav>
 
-  <!-- МОДАЛКА УПРАВЛЕНИЯ -->
-  <div id="adminModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#16171d] w-full max-w-md rounded-2xl border border-gray-700 p-5 max-h-[85vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-white">Управление складом</h3>
-        <button onclick="closeAdminModal()" class="text-gray-400">✕</button>
-      </div>
-      <button onclick="addNewProductPrompt()" class="w-full bg-gray-800 text-white py-2 rounded-lg mb-3">+ Добавить товар</button>
-      <div id="adminProductList" class="space-y-3"></div>
+    <!-- Каталог -->
+    <div id="catalog-section" class="section">
+        <div class="catalog" id="products-grid"></div>
     </div>
-  </div>
 
-  <script>
-    const tg = window.Telegram?.WebApp;
-    if (tg) { tg.expand(); tg.ready(); }
+    <!-- Корзина -->
+    <div id="cart-section" class="section" style="display:none; padding:15px;">
+        <h2 style="color:var(--green);">КОРЗИНА</h2>
+        <div id="cart-items"></div>
+        <div id="cart-total" style="font-size:18px; margin:20px 0; color:var(--green); text-align:center;"></div>
+        <button onclick="checkout()">ОФОРМИТЬ ЗАКАЗ</button>
+    </div>
 
-    const ADMIN_USERS = ['beerezka0', 'mokiner'];
-    const username = tg?.initDataUnsafe?.user?.username || '';
-    const isAdmin = ADMIN_USERS.includes(username);
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const u = tg?.initDataUnsafe?.user;
-      if (u) {
-        document.getElementById('profileName').innerText = `${u.first_name || ''} ${u.last_name || ''}`.trim();
-        document.getElementById('profileTg').innerText = u.username ? `@${u.username}` : '';
-      }
-      if (isAdmin) document.getElementById('adminControlBtn').classList.remove('hidden');
-    });
-
-    // ПОДКЛЮЧЕНИЕ К СЕРВЕРУ
-    const API_URL = '/api/catalog'; 
-    let categories = [
-      { id: 'nicobooster', title: 'Никобустеры', img: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=400' },
-      { id: 'pod', title: 'POD – системы', img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400' },
-      { id: 'chewing', title: 'Жевательные смеси', img: 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400' },
-      { id: 'cartridge', title: 'Картриджи', img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400' },
-    ];
-    let products = [];
-    let cart = JSON.parse(localStorage.getItem('velix_cart')) || [];
-    let currentCategory = null;
-    let activeProduct = null;
-
-    async function loadCatalog() {
-      try {
-        const res = await fetch(API_URL);
-        if (res.ok) products = await res.json();
-      } catch (e) { products = []; }
-      renderCategories();
-      renderProducts();
-    }
-
-    async function saveCatalog() {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, products })
-      });
-    }
-
-    function renderCategories() {
-      document.getElementById('categoryGrid').innerHTML = categories.map(c => `
-        <div onclick="selectCategory('${c.id}')" class="bg-[#16171d] rounded-2xl p-3 border border-gray-800 cursor-pointer flex flex-col items-center">
-          <img src="${c.img}" class="w-full h-24 object-cover rounded-xl mb-2">
-          <span class="text-xs font-bold text-white">${c.title}</span>
+    <!-- Модальное окно товара -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeModal()" style="float:right;font-size:28px;cursor:pointer;color:var(--green);">&times;</span>
+            <img id="modal-image" style="width:100%;height:220px;object-fit:cover;">
+            <h2 id="modal-title" style="margin:10px 0 5px;"></h2>
+            <p id="modal-desc"></p>
+            <div id="modal-variants" style="margin:15px 0;"></div>
+            <div id="modal-price" class="price" style="font-size:18px;"></div>
+            <div id="modal-stock" class="stock"></div>
+            <button onclick="addCurrentToCart()">ДОБАВИТЬ В КОРЗИНУ</button>
         </div>
-      `).join('');
-    }
+    </div>
 
-    function selectCategory(id) {
-      currentCategory = id;
-      const cat = categories.find(c => c.id === id);
-      document.getElementById('currentCategoryTitle').innerText = cat ? cat.title : '';
-      document.getElementById('catalogTitleArea').classList.remove('hidden');
-      renderProducts();
-    }
-
-    function renderProducts() {
-      const list = document.getElementById('productList');
-      let items = currentCategory ? products.filter(p => p.catId === currentCategory) : products;
-      document.getElementById('productCountBadge').innerText = items.length;
-
-      list.innerHTML = items.map(p => `
-        <div class="bg-[#16171d] rounded-2xl border border-gray-800 p-3 flex flex-col justify-between">
-          <div onclick="openDetail('${p.id}')" class="cursor-pointer">
-            <div class="relative w-full h-28 rounded-xl overflow-hidden mb-2 bg-gray-900">
-              <img src="${p.img}" class="w-full h-full object-cover">
-              ${p.stock <= 0 ? '<div class="absolute inset-0 bg-black/80 flex items-center justify-center text-[10px] text-red-400 font-bold">Нет</div>' : ''}
-            </div>
-            <h3 class="text-xs font-bold text-white line-clamp-1">${p.name}</h3>
-            <div class="text-[10px] text-gray-500 mb-2">Остаток: ${p.stock}</div>
-          </div>
-          <div class="flex items-center justify-between pt-2 border-t border-gray-800">
-            <span class="text-sm font-bold text-white">${p.price} Br</span>
-            <button onclick="addToCartDirect('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''} class="p-1.5 bg-blue-600 text-white rounded-lg text-xs">🛒</button>
-          </div>
+    <!-- Оформление заказа -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <h2>ОФОРМЛЕНИЕ ЗАКАЗА</h2>
+            <input type="text" id="name" placeholder="Имя" required>
+            <input type="tel" id="phone" placeholder="Телефон" required>
+            <input type="text" id="address" placeholder="Адрес доставки">
+            <textarea id="comment" placeholder="Комментарий к заказу" rows="3"></textarea>
+            <button onclick="submitOrder()">ОТПРАВИТЬ ЗАКАЗ В TELEGRAM</button>
+            <button onclick="closeCheckout()" style="background:#333;">ОТМЕНА</button>
         </div>
-      `).join('');
-    }
+    </div>
 
-    function openDetail(id) {
-      activeProduct = products.find(p => p.id === id);
-      if (!activeProduct) return;
-      document.getElementById('detailImg').src = activeProduct.img;
-      document.getElementById('detailTitle').innerText = activeProduct.name;
-      document.getElementById('detailSubtitle').innerText = activeProduct.name;
-      document.getElementById('detailPrice').innerText = `${activeProduct.price} Br`;
-      document.getElementById('flavorOptions').innerHTML = activeProduct.flavors.map(f => `<span class="px-3 py-1 bg-gray-800 text-xs text-white rounded-lg">${f}</span>`).join('');
-      switchTab('product-detail');
-    }
+    <div class="cart-float" onclick="showSection('cart')">
+        🛒 <span id="cart-count-bottom">0</span>
+    </div>
 
-    function addToCartDirect(id) {
-      const p = products.find(i => i.id === id);
-      if (!p || p.stock <= 0) return;
-      let item = cart.find(i => i.id === id);
-      if (item) {
-        if (item.qty + 1 > p.stock) return alert('Больше нет в наличии');
-        item.qty++;
-      } else {
-        cart.push({ id: p.id, name: p.name, price: p.price, qty: 1, max: p.stock });
-      }
-      localStorage.setItem('velix_cart', JSON.stringify(cart));
-      updateBadge();
-      alert('Добавлено в корзину');
-    }
+    <script>
+        let cart = [];
+        let currentProduct = null;
 
-    function updateBadge() {
-      const b = document.getElementById('navCartBadge');
-      const count = cart.reduce((s, i) => s + i.qty, 0);
-      b.innerText = count;
-      b.classList.toggle('hidden', count === 0);
-    }
+        const products = [
+            {
+                id: 1,
+                name: "Glitch (150 mg)",
+                price: 13,
+                stock: 45,
+                image: "https://i.imgur.com/YOUR_PRODUCT1.jpg", // Замени
+                variants: ["Полярная Мята", "Двойная мята", "Эвкалипт Мята"],
+                desc: "Мощная жевательная смесь 150mg",
+                category: "Жевательные смеси"
+            },
+            {
+                id: 2,
+                name: "Glitch (75 mg)",
+                price: 13,
+                stock: 28,
+                image: "https://i.imgur.com/YOUR_PRODUCT2.jpg",
+                variants: ["Полярная Мята"],
+                desc: "Облегчённая версия",
+                category: "Жевательные смеси"
+            },
+            // Добавляй сюда новые товары
+        ];
 
-    function renderCart() {
-      const list = document.getElementById('cartItemsList');
-      if (cart.length === 0) {
-        list.innerHTML = `<div class="text-center text-gray-500 text-xs py-6">Корзина пуста</div>`;
-        document.getElementById('cartTotal').innerText = '0 Br';
-        return;
-      }
-      let total = 0;
-      list.innerHTML = cart.map((i, idx) => {
-        total += i.price * i.qty;
-        return `
-          <div class="bg-[#16171d] p-3 rounded-xl border border-gray-800 flex justify-between items-center text-xs">
-            <div>
-              <div class="font-bold text-white">${i.name}</div>
-              <div class="text-blue-400">${i.price} Br</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="changeQty(${idx}, -1)" class="px-2 bg-gray-800 text-white rounded">-</button>
-              <span class="text-white">${i.qty}</span>
-              <button onclick="changeQty(${idx}, 1)" class="px-2 bg-gray-800 text-white rounded">+</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-      document.getElementById('cartTotal').innerText = `${total} Br`;
-    }
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            products.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'product';
+                div.innerHTML = `
+                    <img src="${p.image}" alt="${p.name}">
+                    <h3>${p.name}</h3>
+                    <div class="price">${p.price} Br</div>
+                    <div class="stock">В наличии: ${p.stock}</div>
+                `;
+                div.onclick = () => showProduct(p);
+                grid.appendChild(div);
+            });
+        }
 
-    function changeQty(idx, delta) {
-      cart[idx].qty += delta;
-      if (cart[idx].qty <= 0) cart.splice(idx, 1);
-      localStorage.setItem('velix_cart', JSON.stringify(cart));
-      updateBadge();
-      renderCart();
-    }
+        function showProduct(product) {
+            currentProduct = product;
+            document.getElementById('modal-image').src = product.image;
+            document.getElementById('modal-title').textContent = product.name;
+            document.getElementById('modal-desc').textContent = product.desc;
+            document.getElementById('modal-price').textContent = `${product.price} Br`;
+            document.getElementById('modal-stock').textContent = `Остаток: ${product.stock} шт.`;
 
-    function showCheckoutForm() {
-      if (cart.length === 0) return alert('Корзина пуста');
-      document.getElementById('checkoutFormBlock').classList.remove('hidden');
-    }
+            const vDiv = document.getElementById('modal-variants');
+            vDiv.innerHTML = '<strong>Варианты вкуса:</strong><br>';
+            product.variants.forEach(v => {
+                const btn = document.createElement('button');
+                btn.textContent = v;
+                btn.style.margin = '4px';
+                vDiv.appendChild(btn);
+            });
 
-    function submitOrder() {
-      const name = document.getElementById('orderName').value;
-      const phone = document.getElementById('orderPhone').value;
-      if (!name || !phone) return alert('Введите имя и телефон');
-      
-      const order = { user: name, phone, items: cart };
-      if (tg) tg.sendData(JSON.stringify(order));
-      else alert('Заказ отправлен');
-      cart = [];
-      localStorage.setItem('velix_cart', JSON.stringify(cart));
-      updateBadge();
-      switchTab('catalog');
-    }
+            document.getElementById('product-modal').style.display = 'flex';
+        }
 
-    function openAdminModal() { document.getElementById('adminModal').classList.remove('hidden'); }
-    function closeAdminModal() { document.getElementById('adminModal').classList.add('hidden'); }
+        function closeModal() {
+            document.getElementById('product-modal').style.display = 'none';
+        }
 
-    function renderAdminList() {
-      document.getElementById('adminProductList').innerHTML = products.map((p, idx) => `
-        <div class="bg-[#0a0a0c] p-2 rounded-xl border border-gray-800 text-xs space-y-1">
-          <input type="text" value="${p.name}" onchange="products[${idx}].name=this.value; saveCatalog()" class="w-full bg-gray-800 text-white p-1 rounded">
-          <div class="flex gap-2">
-            Цена: <input type="number" value="${p.price}" onchange="products[${idx}].price=parseFloat(this.value); saveCatalog()" class="w-16 bg-gray-800 text-white p-1 rounded">
-            Остаток: <input type="number" value="${p.stock}" onchange="products[${idx}].stock=parseInt(this.value); saveCatalog()" class="w-16 bg-gray-800 text-white p-1 rounded">
-          </div>
-        </div>
-      `).join('');
-    }
+        function addCurrentToCart() {
+            if (!currentProduct || currentProduct.stock <= 0) {
+                alert("Товара нет в наличии!");
+                return;
+            }
+            cart.push({...currentProduct, quantity: 1});
+            updateCart();
+            closeModal();
+            alert("✅ Добавлено в корзину!");
+        }
 
-    async function addNewProductPrompt() {
-      const name = prompt('Название:');
-      if (!name) return;
-      products.push({ id: Date.now().toString(), catId: 'chewing', name, price: 13, stock: 5, img: 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400', flavors: ['Стандарт'], spec: 'Новинка' });
-      await saveCatalog();
-      renderAdminList();
-      renderProducts();
-    }
+        function updateCart() {
+            const count = cart.length;
+            document.getElementById('cart-count').textContent = count;
+            document.getElementById('cart-count-bottom').textContent = count;
+        }
 
-    function switchTab(name) {
-      document.querySelectorAll('.tab-content').forEach(e => e.classList.add('hidden'));
-      document.getElementById(`tab-${name}`).classList.remove('hidden');
-      if (name === 'cart') renderCart();
-    }
+        function showSection(section) {
+            document.getElementById('catalog-section').style.display = section === 'catalog' ? 'block' : 'none';
+            document.getElementById('cart-section').style.display = section === 'cart' ? 'block' : 'none';
+            
+            if (section === 'cart') renderCart();
+        }
 
-    window.onload = () => { loadCatalog(); updateBadge(); };
-  </script>
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            cart.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.style = 'margin:12px 0; padding:10px; background:#1a1a1a; border:1px solid #333;';
+                div.innerHTML = `
+                    <strong>${item.name}</strong><br>
+                    ${item.price} Br × ${item.quantity} = <span style="color:var(--green)">${item.price * item.quantity} Br</span>
+                    <button onclick="removeFromCart(${i})" style="float:right;background:#900;color:white;border:none;padding:4px 8px;">✕</button>
+                `;
+                container.appendChild(div);
+                total += item.price * item.quantity;
+            });
+
+            document.getElementById('cart-total').textContent = `ИТОГО: ${total} Br`;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+            updateCart();
+        }
+
+        function checkout() {
+            if (cart.length === 0) return alert("Корзина пуста");
+            document.getElementById('checkout-modal').style.display = 'flex';
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkout-modal').style.display = 'none';
+        }
+
+        function submitOrder() {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            if (!name || !phone) return alert("Заполните имя и телефон!");
+
+            const orderData = {
+                user: window.Telegram?.WebApp?.initDataUnsafe?.user || {username: "unknown"},
+                items: cart,
+                total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
+                name, phone,
+                address: document.getElementById('address').value,
+                comment: document.getElementById('comment').value,
+                time: new Date().toLocaleString('ru-RU')
+            };
+
+            if (window.Telegram && window.Telegram.WebApp) {
+                Telegram.WebApp.sendData(JSON.stringify(orderData));
+                Telegram.WebApp.close();
+            } else {
+                console.log("ЗАКАЗ:", orderData);
+                alert("Заказ отправлен (тестовый режим)");
+            }
+
+            cart = [];
+            updateCart();
+            closeCheckout();
+            showSection('catalog');
+        }
+
+        // Инициализация
+        window.onload = () => {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            renderProducts();
+            updateCart();
+        };
+    </script>
 </body>
 </html>
-
-```
