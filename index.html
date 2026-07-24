@@ -3,39 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>VELIX Web App</title>
-  <!-- Telegram WebApp SDK -->
+  <title>VELIX Shop</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
   <style>
-    body {
-      background-color: #131415;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
+    body { background-color: #131415; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
     .tg-card { background-color: #1c1d1e; border-radius: 14px; }
     .tg-input { background-color: #242526; border: 1px solid #333436; color: #fff; }
     .tg-input:focus { border-color: #2481cc; outline: none; }
-    
-    @keyframes slideDown {
-      from { transform: translate(-50%, -100%); opacity: 0; }
-      to { transform: translate(-50%, 0); opacity: 1; }
-    }
-    .toast-anim { animation: slideDown 0.3s ease-out forwards; }
   </style>
 </head>
 <body class="pb-24">
 
   <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] w-11/12 max-w-sm pointer-events-none flex flex-col gap-2"></div>
 
-  <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
-    <header id="header" class="p-3 border-b border-gray-800 sticky top-0 bg-[#131415]/95 backdrop-blur z-30 flex items-center justify-between">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="p-3 border-b border-gray-800 sticky top-0 bg-[#131415]/95 backdrop-blur z-30 flex items-center justify-between">
       <div class="flex items-center space-x-2 overflow-hidden">
         <button id="back-btn" onclick="goBack()" class="hidden text-blue-400 text-sm flex items-center gap-1 font-medium shrink-0">
           <i class="fa-solid fa-chevron-left"></i> Назад
@@ -43,13 +27,12 @@
         <div id="breadcrumbs" class="text-xs font-semibold text-gray-300 truncate">Каталог</div>
       </div>
 
-      <!-- Кнопка «Управление» (Скрыта, видна только администраторам @beerezka0 и @mokiner) -->
-      <button id="admin-btn" onclick="toggleAdminModal()" class="hidden text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1.5 rounded-xl hover:bg-blue-500/20 flex items-center gap-1.5 shrink-0 font-medium">
+      <button id="admin-btn" onclick="toggleAdminModal()" class="hidden text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shrink-0 font-medium">
         <i class="fa-solid fa-gear text-xs"></i> Управление
       </button>
     </header>
 
-    <main id="main-content" class="p-3 flex-1">
+    <main class="p-3 flex-1">
       <div id="search-box" class="relative mb-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
         <input type="text" id="search-input" oninput="handleSearch()" placeholder="Найти товар..." class="w-full tg-input rounded-xl py-2 pl-9 pr-4 text-sm">
@@ -75,39 +58,44 @@
         <i class="fa-solid fa-cart-shopping text-base"></i><span>Корзина</span>
         <span id="cart-badge" class="hidden absolute -top-1 right-2 bg-blue-500 text-white font-bold rounded-full text-[10px] w-4 h-4 flex items-center justify-center">0</span>
       </button>
-      <button onclick="showToast('Избранное', 'info')" class="flex flex-col items-center gap-1">
+      <button onclick="showToast('Раздел Избранное', 'info')" class="flex flex-col items-center gap-1">
         <i class="fa-regular fa-heart text-base"></i><span>Избранное</span>
       </button>
-      <button onclick="showToast('Профиль', 'info')" class="flex flex-col items-center gap-1">
+      <button onclick="showToast('Профиль пользователя', 'info')" class="flex flex-col items-center gap-1">
         <i class="fa-regular fa-user text-base"></i><span>Профиль</span>
       </button>
     </nav>
   </div>
 
-  <!-- АДМИН-ПАНЕЛЬ -->
+  <!-- Админ панель -->
   <div id="admin-modal" class="fixed inset-0 bg-[#131415]/95 backdrop-blur-md z-50 hidden flex flex-col p-4">
     <div class="bg-[#1c1d1e] rounded-2xl flex-1 flex flex-col overflow-hidden max-w-md w-full mx-auto border border-gray-800 shadow-2xl">
       <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#242526]">
         <div>
-          <h2 class="text-base font-bold text-white"><i class="fa-solid fa-sliders text-blue-400 mr-2"></i>Управление</h2>
-          <div id="sync-status" class="text-[10px] text-gray-400 mt-1">⏳ Синхронизация...</div>
+          <h2 class="text-base font-bold text-white"><i class="fa-solid fa-sliders text-blue-400 mr-2"></i>Панель управления</h2>
+          <div id="sync-status" class="text-[10px] text-gray-400 mt-0.5">Подключение к базе...</div>
         </div>
         <button onclick="toggleAdminModal()" class="w-8 h-8 flex items-center justify-center bg-gray-800 rounded-full text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="flex border-b border-gray-800 bg-[#1a1b1c] text-xs font-bold text-center">
+        <button onclick="setAdminTab('catalog')" id="adm-tab-cat" class="flex-1 py-3 text-blue-400 border-b-2 border-blue-500">Каталог</button>
+        <button onclick="setAdminTab('orders')" id="adm-tab-ord" class="flex-1 py-3 text-gray-400">Заказы</button>
       </div>
 
       <div id="admin-breadcrumbs" class="px-4 py-2 text-xs font-semibold text-blue-400 bg-[#1a1b1c] border-b border-gray-800">Категории</div>
 
       <div id="admin-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
-      <div class="p-4 border-t border-gray-800 bg-[#1a1b1c]">
+      <div id="admin-footer" class="p-4 border-t border-gray-800 bg-[#1a1b1c]">
         <button id="admin-add-btn" onclick="openAddModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
-          <i class="fa-solid fa-plus"></i> Добавить
+          <i class="fa-solid fa-plus"></i> Добавить категорию
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ФОРМА ДОБАВЛЕНИЯ -->
+  <!-- Модальное окно создания элементов -->
   <div id="form-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] hidden flex flex-col p-4 justify-center">
     <div class="bg-[#1c1d1e] rounded-2xl p-5 max-w-md w-full mx-auto space-y-4 border border-gray-800 shadow-2xl">
       <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -129,7 +117,7 @@
         </div>
         <div>
           <label class="text-xs text-gray-400 block mb-1.5 ml-1">Описание товара</label>
-          <textarea id="form-desc-input" rows="3" placeholder="Описание, характеристики..." class="w-full tg-input rounded-xl p-3 text-sm resize-none"></textarea>
+          <textarea id="form-desc-input" rows="3" placeholder="Описание, вкус, крепость..." class="w-full tg-input rounded-xl p-3 text-sm resize-none"></textarea>
         </div>
       </div>
       <div class="flex gap-3 pt-4">
@@ -142,7 +130,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.expand(); tg.enableClosingConfirmation(); }
@@ -151,7 +139,7 @@
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       let bgColor = type === 'success' ? 'bg-green-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600');
-      toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-xl text-xs font-bold text-center toast-anim`;
+      toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-xl text-xs font-bold text-center`;
       toast.innerText = message;
       container.appendChild(toast);
       setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
@@ -159,15 +147,17 @@
 
     const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60';
 
-    // Проверка админов
-    const ADMIN_USERS = ['beerezka0', 'mokiner'];
+    // Проверка администраторов
+    const ADMINS = ['beerezka0', 'mokiner'];
     const tgUser = tg?.initDataUnsafe?.user;
     const currentUsername = (tgUser?.username || '').replace('@', '').trim().toLowerCase();
-    if (ADMIN_USERS.map(u => u.toLowerCase()).includes(currentUsername)) {
+    const isAdmin = ADMINS.map(u => u.toLowerCase()).includes(currentUsername);
+
+    if (isAdmin) {
       document.getElementById('admin-btn').classList.remove('hidden');
     }
 
-    // Ваши реальные ключи из Firebase
+    // Инициализация Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBzZ3sloa_KWpUh1aIkqgW...",
       authDomain: "velix-f9dfb.firebaseapp.com",
@@ -181,10 +171,12 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const appId = 'velix-shop';
-    const catalogDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog_main');
+    const catalogRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog_main');
+    const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders_main');
 
     window.appState = {
       categories: [],
+      orders: [],
       cart: [],
       currentView: 'categories',
       selectedCat: null,
@@ -192,50 +184,57 @@
       selectedProduct: null
     };
 
+    let adminTab = 'catalog';
     let adminLevel = 'categories';
     let selectedAdminCatId = null;
     let selectedAdminSubCatId = null;
-    let lastHash = '';
 
-    async function initCloudSync() {
+    async function initApp() {
       try {
         await signInAnonymously(auth);
-        onSnapshot(catalogDocRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data();
-            if (data.categories) {
-              const currentHash = JSON.stringify(data.categories);
-              if (currentHash !== lastHash) {
-                lastHash = currentHash;
-                window.appState.categories = data.categories;
-                refreshCurrentUserView();
-                refreshAdminView();
-                document.getElementById('sync-status').innerText = '🟢 База синхронизирована';
-              }
-            }
+        
+        // Слушаем каталог в реальном времени
+        onSnapshot(catalogRef, (docSnap) => {
+          if (docSnap.exists() && docSnap.data().categories) {
+            window.appState.categories = docSnap.data().categories;
           } else {
-            setDoc(catalogDocRef, { categories: [], updatedAt: serverTimestamp() });
+            // Если базы нет, создаем дефолтную пустую
+            setDoc(catalogRef, { categories: [], updatedAt: serverTimestamp() });
+            window.appState.categories = [];
           }
+          refreshUserView();
+          refreshAdminView();
+          document.getElementById('sync-status').innerText = '🟢 Синхронизировано';
         }, (err) => {
-          document.getElementById('sync-status').innerText = '🔴 Ошибка сети';
+          console.error(err);
+          document.getElementById('sync-status').innerText = '🔴 Ошибка связи';
         });
-      } catch (err) {
-        console.error(err);
+
+        // Слушаем заказы для админов
+        if (isAdmin) {
+          onSnapshot(ordersRef, (snapshot) => {
+            window.appState.orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (adminTab === 'orders') renderAdminList();
+          });
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    async function saveToCloud() {
+    async function saveCatalog() {
       document.getElementById('sync-status').innerText = '⏳ Сохранение...';
       try {
-        await setDoc(catalogDocRef, { categories: window.appState.categories, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(catalogRef, { categories: window.appState.categories, updatedAt: serverTimestamp() }, { merge: true });
+        document.getElementById('sync-status').innerText = '🟢 Сохранено';
         return true;
-      } catch (err) {
-        showToast('Ошибка сохранения', 'error');
+      } catch (e) {
+        showToast('Ошибка сохранения в базу', 'error');
         return false;
       }
     }
 
-    // Пользовательская навигация
+    // Навигация
     function updateBreadcrumbs(crumbs) {
       document.getElementById('breadcrumbs').innerHTML = crumbs.join(' <span class="text-gray-600 font-normal mx-1">&gt;</span> ');
     }
@@ -263,7 +262,7 @@
       else if (tab === 'cart') renderCart();
     };
 
-    function refreshCurrentUserView() {
+    function refreshUserView() {
       const v = window.appState.currentView;
       if (v === 'categories') renderUserCategories();
       else if (v === 'subcategories' && window.appState.selectedCat) window.openUserCategory(window.appState.selectedCat.id);
@@ -271,15 +270,16 @@
       else if (v === 'detail' && window.appState.selectedProduct) window.openProductDetail(window.appState.selectedProduct.id);
     }
 
+    // Рендер каталога для пользователей
     window.renderUserCategories = function() {
       window.appState.selectedCat = null;
-      const container = document.getElementById('view-categories');
+      const c = document.getElementById('view-categories');
       if (!window.appState.categories.length) {
-        container.innerHTML = `<div class="col-span-2 text-center py-10 text-gray-500 text-sm">Каталог пуст.</div>`;
+        c.innerHTML = `<div class="col-span-2 text-center py-16 text-gray-500 text-sm">Каталог пока пуст</div>`;
       } else {
-        container.innerHTML = window.appState.categories.map(cat => `
-          <div onclick="openUserCategory('${cat.id}')" class="tg-card p-2.5 rounded-2xl flex flex-col items-center cursor-pointer">
-            <img src="${cat.image}" loading="lazy" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='${FALLBACK_IMAGE}'">
+        c.innerHTML = window.appState.categories.map(cat => `
+          <div onclick="openUserCategory('${cat.id}')" class="tg-card p-2.5 rounded-2xl flex flex-col items-center cursor-pointer active:scale-95">
+            <img src="${cat.image}" loading="lazy" class="w-full h-32 object-cover rounded-xl mb-2 bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
             <span class="text-xs font-bold text-white line-clamp-1">${cat.title}</span>
           </div>
         `).join('');
@@ -289,58 +289,62 @@
     };
 
     window.openUserCategory = function(catId) {
-      const cat = window.appState.categories.find(c => c.id === catId);
+      const cat = window.appState.categories.find(x => x.id === catId);
       if (!cat) return renderUserCategories();
       window.appState.selectedCat = cat;
-      const container = document.getElementById('view-subcategories');
-      container.innerHTML = (cat.subcategories || []).map(sub => `
-        <div onclick="openUserSubCategory('${sub.id}')" class="tg-card p-2.5 rounded-2xl flex flex-col items-center cursor-pointer">
-          <img src="${sub.image}" loading="lazy" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='${FALLBACK_IMAGE}'">
+
+      const c = document.getElementById('view-subcategories');
+      c.innerHTML = (cat.subcategories || []).map(sub => `
+        <div onclick="openUserSubCategory('${sub.id}')" class="tg-card p-2.5 rounded-2xl flex flex-col items-center cursor-pointer active:scale-95">
+          <img src="${sub.image}" loading="lazy" class="w-full h-32 object-cover rounded-xl mb-2 bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
           <span class="text-xs font-bold text-white line-clamp-1">${sub.title}</span>
         </div>
-      `).join('') || `<div class="col-span-2 text-center py-10 text-gray-500 text-sm">Нет видов</div>`;
+      `).join('') || `<div class="col-span-2 text-center py-16 text-gray-500 text-sm">Нет видов</div>`;
+
       updateBreadcrumbs(['Каталог', cat.title]);
       window.navigateTo('subcategories');
     };
 
     window.openUserSubCategory = function(subId) {
-      const sub = window.appState.selectedCat?.subcategories?.find(s => s.id === subId);
+      const sub = window.appState.selectedCat?.subcategories?.find(x => x.id === subId);
       if (!sub) return window.openUserCategory(window.appState.selectedCat.id);
       window.appState.selectedSubCat = sub;
-      const container = document.getElementById('view-products');
-      container.innerHTML = (sub.products || []).map(prod => `
-        <div onclick="openProductDetail('${prod.id}')" class="tg-card p-2.5 rounded-2xl flex flex-col justify-between cursor-pointer">
+
+      const c = document.getElementById('view-products');
+      c.innerHTML = (sub.products || []).map(prod => `
+        <div onclick="openProductDetail('${prod.id}')" class="tg-card p-2.5 rounded-2xl flex flex-col justify-between cursor-pointer active:scale-95">
           <div>
-            <img src="${prod.image}" loading="lazy" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='${FALLBACK_IMAGE}'">
+            <img src="${prod.image}" loading="lazy" class="w-full h-32 object-cover rounded-xl mb-2 bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
             <h3 class="text-xs font-bold text-white leading-tight line-clamp-2">${prod.title}</h3>
           </div>
           <div class="mt-3 flex justify-between items-center">
             <span class="text-sm font-bold text-blue-400">${prod.price} Br</span>
-            <button class="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs"><i class="fa-solid fa-cart-plus"></i></button>
+            <button class="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center"><i class="fa-solid fa-cart-plus"></i></button>
           </div>
         </div>
-      `).join('') || `<div class="col-span-2 text-center py-10 text-gray-500 text-sm">Нет товаров</div>`;
+      `).join('') || `<div class="col-span-2 text-center py-16 text-gray-500 text-sm">Товаров нет</div>`;
+
       updateBreadcrumbs(['Каталог', window.appState.selectedCat.title, sub.title]);
       window.navigateTo('products');
     };
 
     window.openProductDetail = function(prodId) {
-      const prod = window.appState.selectedSubCat?.products?.find(p => p.id === prodId);
+      const prod = window.appState.selectedSubCat?.products?.find(x => x.id === prodId);
       if (!prod) return window.openUserSubCategory(window.appState.selectedSubCat.id);
       window.appState.selectedProduct = prod;
 
       document.getElementById('view-detail').innerHTML = `
-        <div class="space-y-4 pb-20">
-          <img src="${prod.image}" loading="lazy" class="w-full h-64 object-cover rounded-2xl shadow-lg" onerror="this.src='${FALLBACK_IMAGE}'">
+        <div class="space-y-4 pb-24">
+          <img src="${prod.image}" loading="lazy" class="w-full h-72 object-cover rounded-2xl shadow-xl bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
           <div class="bg-[#1c1d1e] p-4 rounded-2xl border border-gray-800">
-            <h1 class="text-lg font-bold text-white mb-2">${prod.title}</h1>
+            <h1 class="text-base font-bold text-white mb-1">${prod.title}</h1>
             <div class="text-blue-400 font-bold text-lg mb-3">${prod.price} Br</div>
-            <div class="text-sm text-gray-300 bg-[#131415] p-3 rounded-xl border border-gray-800">${prod.description || 'Описание отсутствует.'}</div>
+            <div class="text-xs text-gray-300 leading-relaxed bg-[#131415] p-3 rounded-xl border border-gray-800">${prod.description ? prod.description.replace(/\n/g, '<br>') : 'Описание отсутствует.'}</div>
           </div>
         </div>
         <div class="fixed bottom-[60px] left-0 right-0 max-w-md mx-auto px-4 py-3 bg-[#131415]/95 backdrop-blur-md border-t border-gray-800 z-40">
           <button onclick="addToCart()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
-            <i class="fa-solid fa-cart-shopping"></i> Добавить в корзину
+            <i class="fa-solid fa-cart-shopping"></i> В корзину
           </button>
         </div>
       `;
@@ -348,22 +352,23 @@
       window.navigateTo('detail');
     };
 
+    // Корзина и заказы
     window.addToCart = function() {
-      const prod = window.appState.selectedProduct;
-      const existing = window.appState.cart.find(i => i.prodId === prod.id);
-      if (existing) existing.quantity += 1;
-      else window.appState.cart.push({ prodId: prod.id, title: prod.title, price: prod.price, image: prod.image, quantity: 1 });
+      const p = window.appState.selectedProduct;
+      const item = window.appState.cart.find(x => x.prodId === p.id);
+      if (item) item.quantity += 1;
+      else window.appState.cart.push({ prodId: p.id, title: p.title, price: p.price, image: p.image, quantity: 1 });
       updateCartBadge();
       showToast('Добавлено в корзину');
     };
 
     window.renderCart = function() {
-      const container = document.getElementById('view-cart');
+      const c = document.getElementById('view-cart');
       const total = window.appState.cart.reduce((s, i) => s + (i.price * i.quantity), 0);
       if (!window.appState.cart.length) {
-        container.innerHTML = `<div class="text-center py-20 text-gray-500 font-bold"><i class="fa-solid fa-basket-shopping text-4xl mb-4 block"></i>Корзина пуста</div>`;
+        c.innerHTML = `<div class="text-center py-24 text-gray-500"><i class="fa-solid fa-basket-shopping text-4xl mb-3 block"></i>Корзина пуста</div>`;
       } else {
-        container.innerHTML = `
+        c.innerHTML = `
           <div class="space-y-3">
             ${window.appState.cart.map((item, idx) => `
               <div class="tg-card p-3 rounded-xl flex items-center gap-3">
@@ -381,9 +386,9 @@
             `).join('')}
           </div>
           <div class="bg-[#1c1d1e] p-4 rounded-xl border border-gray-800 mt-4 flex justify-between font-bold text-white">
-             <span>К оплате:</span><span class="text-blue-400">${total} Br</span>
+             <span>Итого:</span><span class="text-blue-400">${total} Br</span>
           </div>
-          <button onclick="openCheckout()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm mt-4">Оформить заказ</button>
+          <button onclick="openCheckout()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm mt-3 shadow-lg">Оформить заказ</button>
         `;
       }
       updateBreadcrumbs(['Корзина']);
@@ -408,10 +413,10 @@
       document.getElementById('view-checkout').innerHTML = `
         <div class="bg-[#1c1d1e] p-4 rounded-xl border border-gray-800">
           <form onsubmit="submitOrder(event)" class="space-y-4">
-            <div><label class="text-xs text-gray-400 block mb-1">Адрес</label><input type="text" id="o-addr" required class="w-full tg-input p-3 rounded-xl text-xs"></div>
+            <div><label class="text-xs text-gray-400 block mb-1">Адрес доставки</label><input type="text" id="o-addr" required class="w-full tg-input p-3 rounded-xl text-xs" placeholder="Город, улица, дом..."></div>
             <div><label class="text-xs text-gray-400 block mb-1">Имя</label><input type="text" id="o-name" required value="${tgUser?.first_name || ''}" class="w-full tg-input p-3 rounded-xl text-xs"></div>
             <div><label class="text-xs text-gray-400 block mb-1">Телефон</label><input type="tel" id="o-phone" required class="w-full tg-input p-3 rounded-xl text-xs" placeholder="+375..."></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm">Подтвердить заказ</button>
+            <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg">Подтвердить заказ</button>
           </form>
         </div>
       `;
@@ -419,20 +424,28 @@
       window.navigateTo('checkout');
     };
 
-    window.submitOrder = function(e) {
+    window.submitOrder = async function(e) {
       e.preventDefault();
-      const payload = {
+      const orderData = {
         name: document.getElementById('o-name').value,
         phone: document.getElementById('o-phone').value,
         address: document.getElementById('o-addr').value,
+        username: tgUser?.username ? '@' + tgUser.username : 'Без username',
         cart: window.appState.cart,
-        total: window.appState.cart.reduce((s, i) => s + (i.price * i.quantity), 0)
+        total: window.appState.cart.reduce((s, i) => s + (i.price * i.quantity), 0),
+        createdAt: new Date().toLocaleString()
       };
-      if (tg && tg.sendData) tg.sendData(JSON.stringify(payload));
-      else showToast('Заказ успешно оформлен!');
-      window.appState.cart = [];
-      updateCartBadge();
-      renderUserCategories();
+
+      try {
+        await addDoc(ordersRef, orderData);
+        if (tg && tg.sendData) tg.sendData(JSON.stringify(orderData));
+        else showToast('Заказ успешно отправлен администраторам!');
+        window.appState.cart = [];
+        updateCartBadge();
+        renderUserCategories();
+      } catch (err) {
+        showToast('Ошибка отправки заказа', 'error');
+      }
     };
 
     window.handleSearch = function() {
@@ -444,27 +457,30 @@
       })));
       document.getElementById('view-search').innerHTML = results.map(prod => `
         <div onclick="openProductDetail('${prod.id}')" class="tg-card p-2.5 rounded-2xl flex flex-col justify-between cursor-pointer">
-          <img src="${prod.image}" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='${FALLBACK_IMAGE}'">
+          <img src="${prod.image}" class="w-full h-32 object-cover rounded-xl mb-2 bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
           <h3 class="text-[11px] font-bold text-white line-clamp-2 mb-2">${prod.title}</h3>
           <span class="text-xs font-bold text-blue-400">${prod.price} Br</span>
         </div>
-      `).join('') || `<div class="col-span-2 text-center py-10 text-gray-500 text-xs">Ничего не найдено</div>`;
+      `).join('') || `<div class="col-span-2 text-center py-16 text-gray-500 text-xs">Ничего не найдено</div>`;
       updateBreadcrumbs(['Поиск']);
       window.navigateTo('search');
     };
 
-    // Админка
+    // Админ панель управление
     window.toggleAdminModal = function() {
-      const modal = document.getElementById('admin-modal');
-      modal.classList.toggle('hidden');
-      if (!modal.classList.contains('hidden')) {
-        adminLevel = 'categories';
-        selectedAdminCatId = null;
-        selectedAdminSubCatId = null;
-        renderAdminList();
-      } else {
-        renderUserCategories();
-      }
+      const m = document.getElementById('admin-modal');
+      m.classList.toggle('hidden');
+      if (!m.classList.contains('hidden')) setAdminTab('catalog');
+      else renderUserCategories();
+    };
+
+    window.setAdminTab = function(tab) {
+      adminTab = tab;
+      document.getElementById('adm-tab-cat').className = tab === 'catalog' ? 'flex-1 py-3 text-blue-400 border-b-2 border-blue-500 font-bold' : 'flex-1 py-3 text-gray-400';
+      document.getElementById('adm-tab-ord').className = tab === 'orders' ? 'flex-1 py-3 text-blue-400 border-b-2 border-blue-500 font-bold' : 'flex-1 py-3 text-gray-400';
+      document.getElementById('admin-footer').classList.toggle('hidden', tab === 'orders');
+      if (tab === 'catalog') { adminLevel = 'categories'; selectedAdminCatId = null; selectedAdminSubCatId = null; }
+      renderAdminList();
     };
 
     function refreshAdminView() {
@@ -476,81 +492,111 @@
       const breadcrumbs = document.getElementById('admin-breadcrumbs');
       const addBtn = document.getElementById('admin-add-btn');
 
+      if (adminTab === 'orders') {
+        breadcrumbs.innerHTML = `Входящие заказы от покупателей`;
+        if (!window.appState.orders.length) {
+          container.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">Нет новых заказов</div>`;
+          return;
+        }
+        container.innerHTML = window.appState.orders.map(o => `
+          <div class="bg-[#242526] p-3 rounded-xl space-y-2 border border-gray-800">
+            <div class="flex justify-between items-center text-xs border-b border-gray-700 pb-2">
+              <span class="font-bold text-white">${o.name} (${o.username})</span>
+              <span class="text-blue-400 font-bold">${o.total} Br</span>
+            </div>
+            <div class="text-[11px] text-gray-300 space-y-0.5">
+              <div>📞 Тел: ${o.phone}</div>
+              <div>📍 Адрес: ${o.address}</div>
+              <div>🕒 Время: ${o.createdAt}</div>
+            </div>
+            <div class="text-[11px] bg-[#1c1d1e] p-2 rounded-lg space-y-1 mt-2">
+              <div class="font-bold text-gray-400">Состав заказа:</div>
+              ${(o.cart || []).map(i => `<div>• ${i.title} x${i.quantity} (${i.price * i.quantity} Br)</div>`).join('')}
+            </div>
+          </div>
+        `).join('');
+        return;
+      }
+
       if (adminLevel === 'categories') {
-        breadcrumbs.innerHTML = `Категории`;
+        breadcrumbs.innerHTML = `Папки (Категории)`;
         addBtn.innerHTML = `<i class="fa-solid fa-folder-plus"></i> Добавить новую категорию`;
         container.innerHTML = window.appState.categories.map(cat => `
-          <div class="bg-[#2a2b2c] p-2.5 rounded-xl flex items-center justify-between">
-            <div onclick="enterAdminSubCategories('${cat.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
-              <img src="${cat.image}" class="w-10 h-10 rounded-lg object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
+          <div class="bg-[#242526] p-2.5 rounded-xl flex items-center justify-between border border-gray-800">
+            <div onclick="enterAdminSub('${cat.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
+              <img src="${cat.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div><h4 class="text-xs font-bold text-white">${cat.title}</h4><p class="text-[10px] text-gray-400">${(cat.subcategories || []).length} видов &gt;</p></div>
             </div>
-            <button onclick="deleteCategory('${cat.id}')" class="w-8 h-8 bg-red-500/10 text-red-400 rounded-lg ml-2"><i class="fa-solid fa-trash"></i></button>
+            <button onclick="deleteCategory('${cat.id}')" class="w-8 h-8 bg-red-500/10 text-red-400 rounded-lg ml-2 flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
           </div>
-        `).join('') || `<div class="text-center text-gray-500 py-6 text-xs">Нет категорий</div>`;
-      } else if (adminLevel === 'subcategories') {
-        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
-        breadcrumbs.innerHTML = `<span onclick="setAdminLevel('categories')" class="cursor-pointer">Категории</span> &gt; ${cat?.title || ''}`;
+        `).join('') || `<div class="text-center text-gray-500 py-12 text-xs">Нет категорий</div>`;
+      } 
+      else if (adminLevel === 'subcategories') {
+        const cat = window.appState.categories.find(x => x.id === selectedAdminCatId);
+        breadcrumbs.innerHTML = `<span onclick="setAdminLevel('categories')" class="cursor-pointer text-blue-400">Категории</span> &gt; ${cat?.title || ''}`;
         addBtn.innerHTML = `<i class="fa-solid fa-layer-group"></i> Добавить вид категории`;
         container.innerHTML = (cat?.subcategories || []).map(sub => `
-          <div class="bg-[#2a2b2c] p-2.5 rounded-xl flex items-center justify-between">
-            <div onclick="enterAdminProducts('${sub.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
-              <img src="${sub.image}" class="w-10 h-10 rounded-lg object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
+          <div class="bg-[#242526] p-2.5 rounded-xl flex items-center justify-between border border-gray-800">
+            <div onclick="enterAdminProd('${sub.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
+              <img src="${sub.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div><h4 class="text-xs font-bold text-white">${sub.title}</h4><p class="text-[10px] text-gray-400">${(sub.products || []).length} товаров &gt;</p></div>
             </div>
-            <button onclick="deleteSubCategory('${sub.id}')" class="w-8 h-8 bg-red-500/10 text-red-400 rounded-lg ml-2"><i class="fa-solid fa-trash"></i></button>
+            <button onclick="deleteSubCategory('${sub.id}')" class="w-8 h-8 bg-red-500/10 text-red-400 rounded-lg ml-2 flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
           </div>
-        `).join('') || `<div class="text-center text-gray-500 py-6 text-xs">Нет видов</div>`;
-      } else if (adminLevel === 'products') {
-        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
-        const sub = cat?.subcategories?.find(s => s.id === selectedAdminSubCatId);
-        breadcrumbs.innerHTML = `<span onclick="setAdminLevel('categories')">📁</span> &gt; <span onclick="setAdminLevel('subcategories')">${cat?.title || ''}</span> &gt; ${sub?.title || ''}`;
+        `).join('') || `<div class="text-center text-gray-500 py-12 text-xs">Нет видов</div>`;
+      } 
+      else if (adminLevel === 'products') {
+        const cat = window.appState.categories.find(x => x.id === selectedAdminCatId);
+        const sub = cat?.subcategories?.find(x => x.id === selectedAdminSubCatId);
+        breadcrumbs.innerHTML = `<span onclick="setAdminLevel('categories')" class="cursor-pointer">📁</span> &gt; <span onclick="setAdminLevel('subcategories')" class="cursor-pointer text-blue-400">${cat?.title || ''}</span> &gt; ${sub?.title || ''}`;
         addBtn.innerHTML = `<i class="fa-solid fa-box"></i> Добавить разновидность`;
         container.innerHTML = (sub?.products || []).map(prod => `
-          <div class="bg-[#2a2b2c] p-2.5 rounded-xl flex items-center justify-between">
+          <div class="bg-[#242526] p-2.5 rounded-xl flex items-center justify-between border border-gray-800">
             <div class="flex items-center gap-3 flex-1">
-              <img src="${prod.image}" class="w-10 h-10 rounded-lg object-cover" onerror="this.src='${FALLBACK_IMAGE}'">
+              <img src="${prod.image}" class="w-10 h-10 rounded-lg object-cover bg-gray-800" onerror="this.src='${FALLBACK_IMAGE}'">
               <div class="flex-1"><h4 class="text-[11px] font-bold text-white line-clamp-1">${prod.title}</h4><div class="text-[10px] text-blue-400 font-bold">${prod.price} Br</div></div>
             </div>
-            <button onclick="deleteProduct('${prod.id}')" class="w-8 h-8 bg-red-500/10 text-red-400 rounded-lg ml-2"><i class="fa-solid fa-trash"></i></button>
+            <button onclick="deleteProduct('${prod.id}')" class="w-8 h-8 bg-red-500/10 text-red-400 rounded-lg ml-2 flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
           </div>
-        `).join('') || `<div class="text-center text-gray-500 py-6 text-xs">Нет товаров</div>`;
+        `).join('') || `<div class="text-center text-gray-500 py-12 text-xs">Нет товаров</div>`;
       }
     }
 
     window.setAdminLevel = function(level) { adminLevel = level; renderAdminList(); };
-    window.enterAdminSubCategories = function(catId) { selectedAdminCatId = catId; adminLevel = 'subcategories'; renderAdminList(); };
-    window.enterAdminProducts = function(subCatId) { selectedAdminSubCatId = subCatId; adminLevel = 'products'; renderAdminList(); };
+    window.enterAdminSub = function(catId) { selectedAdminCatId = catId; adminLevel = 'subcategories'; renderAdminList(); };
+    window.enterAdminProd = function(subId) { selectedAdminSubCatId = subId; adminLevel = 'products'; renderAdminList(); };
 
+    // Удаление
     window.deleteCategory = async function(catId) {
-      if (confirm('Удалить категорию?')) {
+      if (confirm('Удалить эту категорию?')) {
         const backup = JSON.parse(JSON.stringify(window.appState.categories));
-        window.appState.categories = window.appState.categories.filter(c => c.id !== catId);
-        if (await saveToCloud()) renderAdminList(); else window.appState.categories = backup;
+        window.appState.categories = window.appState.categories.filter(x => x.id !== catId);
+        if (await saveCatalog()) renderAdminList(); else window.appState.categories = backup;
       }
     };
     window.deleteSubCategory = async function(subId) {
-      if (confirm('Удалить вид?')) {
+      if (confirm('Удалить этот вид?')) {
         const backup = JSON.parse(JSON.stringify(window.appState.categories));
-        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
+        const cat = window.appState.categories.find(x => x.id === selectedAdminCatId);
         if (cat) {
-          cat.subcategories = cat.subcategories.filter(s => s.id !== subId);
-          if (await saveToCloud()) renderAdminList(); else window.appState.categories = backup;
+          cat.subcategories = cat.subcategories.filter(x => x.id !== subId);
+          if (await saveCatalog()) renderAdminList(); else window.appState.categories = backup;
         }
       }
     };
     window.deleteProduct = async function(prodId) {
-      if (confirm('Удалить товар?')) {
+      if (confirm('Удалить эту разновидность?')) {
         const backup = JSON.parse(JSON.stringify(window.appState.categories));
-        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
-        const sub = cat?.subcategories?.find(s => s.id === selectedAdminSubCatId);
+        const cat = window.appState.categories.find(x => x.id === selectedAdminCatId);
+        const sub = cat?.subcategories?.find(x => x.id === selectedAdminSubCatId);
         if (sub) {
-          sub.products = sub.products.filter(p => p.id !== prodId);
-          if (await saveToCloud()) renderAdminList(); else window.appState.categories = backup;
+          sub.products = sub.products.filter(x => x.id !== prodId);
+          if (await saveCatalog()) renderAdminList(); else window.appState.categories = backup;
         }
       }
     };
 
+    // Форма добавления
     window.openAddModal = function() {
       document.getElementById('form-title-input').value = '';
       document.getElementById('form-image-input').value = '';
@@ -573,20 +619,27 @@
       if (adminLevel === 'categories') {
         window.appState.categories.push({ id: 'cat_' + Date.now(), title, image, subcategories: [] });
       } else if (adminLevel === 'subcategories') {
-        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
+        const cat = window.appState.categories.find(x => x.id === selectedAdminCatId);
         if (cat) cat.subcategories.push({ id: 'sub_' + Date.now(), title, image, products: [] });
       } else if (adminLevel === 'products') {
         const price = Number(document.getElementById('form-price-input').value) || 15;
         const description = document.getElementById('form-desc-input').value.trim();
-        const cat = window.appState.categories.find(c => c.id === selectedAdminCatId);
-        const sub = cat?.subcategories?.find(s => s.id === selectedAdminSubCatId);
+        const cat = window.appState.categories.find(x => x.id === selectedAdminCatId);
+        const sub = cat?.subcategories?.find(x => x.id === selectedAdminSubCatId);
         if (sub) sub.products.push({ id: 'prod_' + Date.now(), title, image, price, description });
       }
 
-      if (await saveToCloud()) { closeFormModal(); renderAdminList(); } else { window.appState.categories = backup; }
+      if (await saveCatalog()) {
+        closeFormModal();
+        renderAdminList();
+      } else {
+        window.appState.categories = backup;
+      }
     };
 
-    window.onload = function() { initCloudSync(); };
+    window.onload = function() {
+      initApp();
+    };
   </script>
 </body>
 </html>
