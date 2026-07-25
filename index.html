@@ -16,9 +16,11 @@
 </head>
 <body class="pb-24">
 
+  <!-- Уведомления -->
   <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] w-11/12 max-w-sm pointer-events-none flex flex-col gap-2"></div>
 
   <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <!-- Шапка -->
     <header class="p-3 border-b border-gray-800 sticky top-0 bg-[#131415]/95 backdrop-blur z-30 flex items-center justify-between">
       <div class="flex items-center space-x-2 overflow-hidden">
         <button id="back-btn" onclick="goBack()" class="hidden text-blue-400 text-sm flex items-center gap-1 font-medium shrink-0">
@@ -27,11 +29,13 @@
         <div id="breadcrumbs" class="text-xs font-semibold text-gray-300 truncate">Каталог</div>
       </div>
 
+      <!-- Кнопка Управление (Видна строго администраторам) -->
       <button id="admin-btn" onclick="toggleAdminModal()" class="hidden text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shrink-0 font-medium">
         <i class="fa-solid fa-gear text-xs"></i> Управление
       </button>
     </header>
 
+    <!-- Основной контент -->
     <main class="p-3 flex-1">
       <div id="search-box" class="relative mb-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
@@ -47,6 +51,7 @@
       <div id="view-search" class="hidden grid grid-cols-2 gap-3"></div>
     </main>
 
+    <!-- Нижнее меню -->
     <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#1a1b1c] border-t border-gray-800 px-2 py-2 flex justify-around items-center z-40 text-xs text-gray-400">
       <button onclick="switchTab('catalog')" id="nav-catalog" class="flex flex-col items-center gap-1 text-blue-400">
         <i class="fa-solid fa-border-all text-base"></i><span>Каталог</span>
@@ -58,22 +63,22 @@
         <i class="fa-solid fa-cart-shopping text-base"></i><span>Корзина</span>
         <span id="cart-badge" class="hidden absolute -top-1 right-2 bg-blue-500 text-white font-bold rounded-full text-[10px] w-4 h-4 flex items-center justify-center">0</span>
       </button>
-      <button onclick="showToast('Раздел Избранное', 'info')" class="flex flex-col items-center gap-1">
+      <button onclick="showToast('Избранное', 'info')" class="flex flex-col items-center gap-1">
         <i class="fa-regular fa-heart text-base"></i><span>Избранное</span>
       </button>
-      <button onclick="showToast('Профиль пользователя', 'info')" class="flex flex-col items-center gap-1">
+      <button onclick="showToast('Профиль', 'info')" class="flex flex-col items-center gap-1">
         <i class="fa-regular fa-user text-base"></i><span>Профиль</span>
       </button>
     </nav>
   </div>
 
-  <!-- Админ панель -->
+  <!-- Админ-панель -->
   <div id="admin-modal" class="fixed inset-0 bg-[#131415]/95 backdrop-blur-md z-50 hidden flex flex-col p-4">
     <div class="bg-[#1c1d1e] rounded-2xl flex-1 flex flex-col overflow-hidden max-w-md w-full mx-auto border border-gray-800 shadow-2xl">
       <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#242526]">
         <div>
           <h2 class="text-base font-bold text-white"><i class="fa-solid fa-sliders text-blue-400 mr-2"></i>Панель управления</h2>
-          <div id="sync-status" class="text-[10px] text-gray-400 mt-0.5">Подключение к базе...</div>
+          <div id="sync-status" class="text-[10px] text-gray-400 mt-0.5">Синхронизация...</div>
         </div>
         <button onclick="toggleAdminModal()" class="w-8 h-8 flex items-center justify-center bg-gray-800 rounded-full text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -88,14 +93,14 @@
       <div id="admin-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
       <div id="admin-footer" class="p-4 border-t border-gray-800 bg-[#1a1b1c]">
-        <button id="admin-add-btn" onclick="openAddModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
+        <button id="admin-add-btn" onclick="openAddModal()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
           <i class="fa-solid fa-plus"></i> Добавить категорию
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Модальное окно создания элементов -->
+  <!-- Форма добавления -->
   <div id="form-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] hidden flex flex-col p-4 justify-center">
     <div class="bg-[#1c1d1e] rounded-2xl p-5 max-w-md w-full mx-auto space-y-4 border border-gray-800 shadow-2xl">
       <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -117,7 +122,7 @@
         </div>
         <div>
           <label class="text-xs text-gray-400 block mb-1.5 ml-1">Описание товара</label>
-          <textarea id="form-desc-input" rows="3" placeholder="Описание, вкус, крепость..." class="w-full tg-input rounded-xl p-3 text-sm resize-none"></textarea>
+          <textarea id="form-desc-input" rows="3" placeholder="Описание, крепость..." class="w-full tg-input rounded-xl p-3 text-sm resize-none"></textarea>
         </div>
       </div>
       <div class="flex gap-3 pt-4">
@@ -147,17 +152,21 @@
 
     const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1534067783941-51c97027f385?w=300&auto=format&fit=crop&q=60';
 
-    // Проверка администраторов
+    // ПРОВЕРКА АДМИНА ПО USERNAME
     const ADMINS = ['beerezka0', 'mokiner'];
     const tgUser = tg?.initDataUnsafe?.user;
-    const currentUsername = (tgUser?.username || '').replace('@', '').trim().toLowerCase();
-    const isAdmin = ADMINS.map(u => u.toLowerCase()).includes(currentUsername);
+    
+    // Получаем username из Телеграм или проверяем URL (для тестирования с ПК)
+    let currentUsername = (tgUser?.username || '').replace('@', '').trim().toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === '1') currentUsername = 'beerezka0'; // Удобный отладчик с ПК
 
+    const isAdmin = ADMINS.map(u => u.toLowerCase()).includes(currentUsername);
     if (isAdmin) {
       document.getElementById('admin-btn').classList.remove('hidden');
     }
 
-    // Инициализация Firebase
+    // Инициализация базы данных Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBzZ3sloa_KWpUh1aIkqgW...",
       authDomain: "velix-f9dfb.firebaseapp.com",
@@ -193,24 +202,20 @@
       try {
         await signInAnonymously(auth);
         
-        // Слушаем каталог в реальном времени
-        onSnapshot(catalogRef, (docSnap) => {
-          if (docSnap.exists() && docSnap.data().categories) {
-            window.appState.categories = docSnap.data().categories;
+        onSnapshot(catalogRef, (snap) => {
+          if (snap.exists() && snap.data().categories) {
+            window.appState.categories = snap.data().categories;
           } else {
-            // Если базы нет, создаем дефолтную пустую
             setDoc(catalogRef, { categories: [], updatedAt: serverTimestamp() });
             window.appState.categories = [];
           }
           refreshUserView();
           refreshAdminView();
           document.getElementById('sync-status').innerText = '🟢 Синхронизировано';
-        }, (err) => {
-          console.error(err);
+        }, () => {
           document.getElementById('sync-status').innerText = '🔴 Ошибка связи';
         });
 
-        // Слушаем заказы для админов
         if (isAdmin) {
           onSnapshot(ordersRef, (snapshot) => {
             window.appState.orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -229,7 +234,7 @@
         document.getElementById('sync-status').innerText = '🟢 Сохранено';
         return true;
       } catch (e) {
-        showToast('Ошибка сохранения в базу', 'error');
+        showToast('Ошибка сохранения', 'error');
         return false;
       }
     }
@@ -270,12 +275,12 @@
       else if (v === 'detail' && window.appState.selectedProduct) window.openProductDetail(window.appState.selectedProduct.id);
     }
 
-    // Рендер каталога для пользователей
+    // Отображение каталога для покупателей
     window.renderUserCategories = function() {
       window.appState.selectedCat = null;
       const c = document.getElementById('view-categories');
       if (!window.appState.categories.length) {
-        c.innerHTML = `<div class="col-span-2 text-center py-16 text-gray-500 text-sm">Каталог пока пуст</div>`;
+        c.innerHTML = `<div class="col-span-2 text-center py-16 text-gray-500 text-sm">Каталог пуст</div>`;
       } else {
         c.innerHTML = window.appState.categories.map(cat => `
           <div onclick="openUserCategory('${cat.id}')" class="tg-card p-2.5 rounded-2xl flex flex-col items-center cursor-pointer active:scale-95">
@@ -352,7 +357,7 @@
       window.navigateTo('detail');
     };
 
-    // Корзина и заказы
+    // Корзина
     window.addToCart = function() {
       const p = window.appState.selectedProduct;
       const item = window.appState.cart.find(x => x.prodId === p.id);
@@ -430,7 +435,7 @@
         name: document.getElementById('o-name').value,
         phone: document.getElementById('o-phone').value,
         address: document.getElementById('o-addr').value,
-        username: tgUser?.username ? '@' + tgUser.username : 'Без username',
+        username: tgUser?.username ? '@' + tgUser.username : (currentUsername ? '@' + currentUsername : 'Покупатель'),
         cart: window.appState.cart,
         total: window.appState.cart.reduce((s, i) => s + (i.price * i.quantity), 0),
         createdAt: new Date().toLocaleString()
@@ -466,7 +471,7 @@
       window.navigateTo('search');
     };
 
-    // Админ панель управление
+    // Управление админ-панелью
     window.toggleAdminModal = function() {
       const m = document.getElementById('admin-modal');
       m.classList.toggle('hidden');
@@ -566,7 +571,7 @@
     window.enterAdminSub = function(catId) { selectedAdminCatId = catId; adminLevel = 'subcategories'; renderAdminList(); };
     window.enterAdminProd = function(subId) { selectedAdminSubCatId = subId; adminLevel = 'products'; renderAdminList(); };
 
-    // Удаление
+    // Индивидуальное удаление
     window.deleteCategory = async function(catId) {
       if (confirm('Удалить эту категорию?')) {
         const backup = JSON.parse(JSON.stringify(window.appState.categories));
@@ -596,7 +601,7 @@
       }
     };
 
-    // Форма добавления
+    // Форма добавления элементов
     window.openAddModal = function() {
       document.getElementById('form-title-input').value = '';
       document.getElementById('form-image-input').value = '';
